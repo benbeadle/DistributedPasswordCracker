@@ -24,24 +24,14 @@ void lsp_set_epoch_lth(double lth);
 void lsp_set_epoch_cnt(int cnt);
 void lsp_set_drop_rate(double rate);
 
-
-typedef struct
-{
-
-	
-} lsp_client;
+class lsp_client;
 
 lsp_client* lsp_client_create(const char* dest, int port);
 int lsp_client_read(lsp_client* a_client, uint8_t* pld);
 bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth);
 bool lsp_client_close(lsp_client* a_client);
 
-
-typedef struct
-{
-
-} lsp_server;
-
+class lsp_server;
 
 lsp_server* lsp_server_create(int port);
 int  lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id);

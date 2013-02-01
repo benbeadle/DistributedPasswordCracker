@@ -27,24 +27,33 @@ void lsp_set_drop_rate(double rate){drop_rate = rate;}
  */  
 
 
+//Returns false if server is not available
 lsp_client* lsp_client_create(const char* src, int port)
 {
+	lsp_client* c = new lsp_client(src, port);
+	if(c->sd < 0)
+		return 0;
+	return c;
 }
 
+//Returns -1 when connection lost
+//Returns # bites read
 int lsp_client_read(lsp_client* a_client, uint8_t* pld)
 {
-
-	
+	return lsp_client->read(pld);
 }
 
+//Should not send null
 bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth)
 {
-
+	return a_client->write(pld, lth);
 }
 
+//Close connection, remember free memory
 bool lsp_client_close(lsp_client* a_client)
 {
-	
+	//Since the desctuctor automatically gets called,
+	//Don't think we need to do anything here
 }
 
 /*
