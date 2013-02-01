@@ -26,12 +26,23 @@ void lsp_set_drop_rate(double rate);
 
 class lsp_client;
 
+typedef struct
+{
+
+	
+} lsp_client;
+
 lsp_client* lsp_client_create(const char* dest, int port);
 int lsp_client_read(lsp_client* a_client, uint8_t* pld);
 bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth);
 bool lsp_client_close(lsp_client* a_client);
 
-class lsp_server;
+
+typedef struct
+{
+
+} lsp_server;
+
 
 lsp_server* lsp_server_create(int port);
 int  lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id);

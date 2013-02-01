@@ -16,6 +16,13 @@ struct sockaddr_in serveraddr;
 socklen_t serveraddrlen = sizeof(serveraddr);
 struct hostent *hostp;
 
+typedef struct {
+	uint32_t id;
+	uint32_t sn;
+	uint8_t* d[];
+	
+} lsp_packet;
+
 class lsp_client {
 	
 	lsp_packet* indbox_head;
