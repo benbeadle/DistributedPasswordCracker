@@ -1,0 +1,4 @@
+
+timer_process(int n){
+	every n seconds send signal that networkIO client-states can intercept
+}

@@ -10,11 +10,6 @@ typedef struct{
 	linked_packet outbox_head;
 }lsp_server;
 
-typedef struct{
-	lsp_packet packet;
-	lsp_packet* next;
-}linked_packet;
-
 lsp_server start_lsp_server(int port){
 	lsp_server server;
 	memset(&server, 0,sizeof(lsp_server));

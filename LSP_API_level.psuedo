@@ -1,0 +1,29 @@
+
+struct server{
+	IPC_message_queue unifiedoutbox;
+	IPC_message_queue unifiedoubox;
+}
+
+lsp_server* lsper_server_create(int port){ 
+	create server struct;
+	
+	spawn networkIO fork
+	spawn epoch timer
+	
+	return server
+}
+
+int lsp_server_read(lsp_server* asrv, void* pld, uint32_t* conn_id){
+	msg = asrv.unifiedinbox.consume_msg;
+	pld = msg;
+	conn_id = msg.id;
+	return msg.length;
+}
+
+bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id){
+	put the message in a_srv->unifiedoutbox
+}
+
+accept new inbox/outbox{
+	accept the ability to have new outboxes and inboxes (message queues?) be generated and connect to this process. This mechanism is unkown;
+}

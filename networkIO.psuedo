@@ -1,0 +1,67 @@
+
+networkIOlooper{
+	socketfd = new socket(port)  //bind to a get a socket file descripto
+	fdmap(key = message id, value = connection pipes); // we need a way to keep track of all the connection ids and what pipe will send messages to them
+	
+	while(true){
+		afds += socketfd //afds is the set of all file descriptors were waiting to read from
+		select(afds)
+		if(ISSET(socketfd, afds)){ //if we have an incoming packet, find what connection it belongs to pass it along
+			msg = read(socketfd);
+			if (msg.id is NOT in fdmap) generate_client_state(); // if we've never seen this id before we need to generate a new client for it
+			send(msg, fdmap.get(msg.id))
+		}
+		for_all(fds in afds) //if we have an outgoing message, send it
+			send(socketfd, fds.msg)
+	}
+
+}
+
+generate_client_state()
+	int inboxfds[2]; pipe(inboxfds); //make a pipe from the network to the client-state
+	int outboxfds[2]; pipe(outboxfds); //make a pipe from the client-state to the network
+	
+	fork()
+	if parent
+		close inboxfds[1]
+		add inboxfds[0] to fdmap with key of msg.id
+		close outboxfds[0]
+		add outboxfds[0] to afds
+		return // return to bieng a good networkIO manager
+	if child, we are now a client state machine
+		close inboxfds[0]
+		close outboxfds[1]
+		close socketfds;
+		connection_state_monitor() //lets get into our client-state code
+}
+
+connection_state_monitor(){
+	establish IPC inbox queue with server API level (a level above us). It is acceptable to inherit the unified inbox and create a view filtered by the connection's id
+	establish IPC outbox queue (message queue?) with API level. It is acceptable to inherit the unified outbox and create a view filtered by the connection's id
+	Message nextACK; //This is the next ACK we need to send
+	push_back acknowledgement of connection request in in outbox queue
+	register a signal handler for a epoch timer signals. It should point to timer_event_handler() The mechanism  for this is unkown. This is our EPOCH. 
+	
+	while(true){
+		if(nextACK != NULL) send(nextACK, outboxfds[0]);
+		poll outbox IPC queue BLOCKING OPERATION //wait for a packet we need to send
+		send(outboxfds[0], outbox.msg)
+		while(true){
+			msg = read(inboxfds[1]) BLOCKING OPERATION //we MUST wait according to the protocol for a reply ACK from the other side
+			if( msg == outbox.msg.get_correct_ACK() ){ //if we recieve the ACK for the packet we sent, we consider this having been succesful and move on to the next outgoing message
+				outbox.current = outbox.next;
+				break; 	SHOULD JUMP TO OUTER FOR LOOP
+			}
+			else{ //we recieved a data message. Add it to the inbox and put the ACK we need to send int nextACK. This is ok b/c they cant have sent a new data message unless they already recieved the ACK we sent. If they have not recieved our ack, then this new ack will be the same as the previous
+				inbox.add(msg);
+				nextACK = msg.get_correct_ACK;
+			}
+		}
+	}
+}
+
+timer_event_handler(){
+	send(outboxfds[0], outbox.msg);
+	send(outboxfds[0], nextACK);
+}
+		
