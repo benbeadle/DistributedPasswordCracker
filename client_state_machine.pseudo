@@ -1,0 +1,62 @@
+class clientStateMachine {
+  msg nextACK; //The latest message sent, keep sending the ack
+  enum state{wait_to_send, wait_to_receive}
+  msg latest_message_sent;
+  int missed_epochs = 0;
+  int latest_epoch_seq = 0;
+  
+  void sendMsg(msg message) {
+    if(state == wait_to_send) {
+      //Only change state if not sending an ACK
+      if(message.data != nil) {
+        latest_message_sent = message
+        state = wait_to_receive;
+      }
+    }
+    
+    if(state == wait_to_receive) {
+      
+    }
+  }
+  
+  void receiveMsg(msg message) {
+    if(state == wait_to_send) {
+      receiveData(message);
+    }
+    if(state == wait_to_receive) {
+      if(message.data != nil) {
+        receiveData(message);
+      } else {
+        if(message.seqnum == latest_message_sent.seqnum) {
+          state = wait_to_send;
+        }
+      }
+    }
+  }
+  
+  void receiveData(msg message) {
+    inbox.add(msg);
+    update nextACK;
+    add nextACK to outbox;
+    return;
+  }
+  
+  void epoch_tick() {
+    if(latest_message_sent.seqnum == latest_epoch_seq) {
+      missed_epochs++;
+    } else {
+      latest_epoch_seq = latest_message_sent.seqnum;
+      missed_epochs = 0;
+    }
+    if(missed_epochs == MAX_MISSED_EPOCH_LIMIT) {
+      //terminate connection
+      return;
+    }
+    if(state == wait_to_send) {
+      send(nextACK);
+    } else {
+      send(nextACK);
+      send(latest_message_sent);
+    }
+  }
+}
