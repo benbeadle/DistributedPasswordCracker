@@ -67,7 +67,12 @@ bool lsp_client_close(lsp_client* a_client)
 
 lsp_server* lsp_server_create(int port)
 {
-
+	create server struct;
+	
+	spawn networkIO fork
+	spawn epoch timer
+	
+	return server
 }
 
 int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id)
