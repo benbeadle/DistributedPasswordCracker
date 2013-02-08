@@ -112,7 +112,7 @@ void add_packet_end(lsp_packet newpacket, linked_packet* box){
 	current->next = new_linked_packet;
 }
 
-//Delete from the front? 
+//Delete from the front
 lsp_packet consume_packet(linked_packet* box){
 	if(box == NULL){ return NULL }
 	linked_packet* current_packet = box;
