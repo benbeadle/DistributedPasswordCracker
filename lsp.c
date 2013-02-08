@@ -6,11 +6,7 @@ int epoch_cnt = _EPOCH_CNT;
 double drop_rate = _DROP_RATE;
 
 /*
- *
- *
  *				LSP RELATED FUNCTIONS
- *
- *
  */  
 
 void lsp_set_epoch_lth(double lth){epoch_lth = lth;}
@@ -19,11 +15,7 @@ void lsp_set_drop_rate(double rate){drop_rate = rate;}
 
 
 /*
- *
- *
  *				CLIENT RELATED FUNCTIONS
- *
- *
  */  
 
 
@@ -57,11 +49,7 @@ bool lsp_client_close(lsp_client* a_client)
 }
 
 /*
- *
- *
  *				SERVER RELATED FUNCTIONS
- *
- *
  */  
 
 
@@ -88,4 +76,59 @@ bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id)
 bool lsp_server_close(lsp_server* a_srv, uint32_t conn_id)
 {
 
+}
+
+/*
+*	Linked List Data Structure
+*/
+
+//Creating a node
+void add_packet(lsp_packet newpacket, linked_packet* box){
+	while(box->next != NULL){
+		box = box->next;
+	}
+	linked_packet* next_linked_packet = malloc(sizeof(linked_packet));
+	next_linked_packet->packet = newpacket;
+	box->next = next_linked_packet;
+}
+
+//add to the front of linked list
+void add_packet_front(lsp_packet newpacket, linked_packet* box){
+	linked_packet* new_linked_packet;	
+	new_linked_packet = malloc(sizeof(linked_packet));
+	new_linked_packet->packet = newpacket;
+	new_linked_packet->next = box->next;
+	box->next = new_linked_packet;
+}
+
+//Add to the end of linked list
+void add_packet_end(lsp_packet newpacket, linked_packet* box){
+	linked_packet* current = box;
+	linked_packet* new_linked_packet;
+	new_linked_packet = malloc(sizeof(linked_packet));
+	if(new_linked_packet == NULL){
+		printf("malloc failed\n");
+		exit(-1);
+	}
+	new_linked_packet->packet = newpacket;
+	new_linked_packet->next = NULL;
+
+	while(current->next){
+		current = current->next;
+	}
+	current->next = new_linked_packet;
+}
+
+//Delete from the front
+lsp_packet consume_packet(linked_packet* box){
+	if(box == NULL){ return NULL }
+	linked_packet* current_packet = box;
+	lsp_packet packet = current_packet->packet;
+	if(box->next != NULL){
+		box = box->next;
+	} else {
+		box = NULL;
+	}
+	free(current_packet);
+	return packet;
 }

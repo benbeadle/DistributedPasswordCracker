@@ -1,10 +1,4 @@
-#include "lsp.h"
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include "lsp_client.h"
 
 /* Variables:
 
@@ -23,7 +17,7 @@ typedef struct {
 	
 } lsp_packet;
 
-class lsp_client {
+class lsp_client{
 	
 	lsp_packet* indbox_head;
 	lsp_packet* outbox_head;

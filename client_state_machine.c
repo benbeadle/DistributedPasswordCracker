@@ -1,19 +1,27 @@
+#include "client_state_machine.h"
 
-client_state_machine start_csm(sockaddr_in address){
-    client_state_machine csm = *malloc(sizeof(client_state_machine));
-    csm.current_state = wait_to_receive;
-    csm.clientaddr = address;
-    csm.missed_epochs = 0;
-    csm.lastest_epoch_seq = 0;
-    csm.connid = get_next_connectionId();
-    //TODO send ack
-    //TODO assign new ACK made to nextACk
-    //WARNING other stuff should check if must check if lastest message is NULL
+client_state_machine* start_csm(sockaddr address, const Server* server){
+    client_state_machine* csm = malloc(sizeof(client_state_machine));
+    csm->current_state = State.wait_to_receive;
+    csm->clientaddr = address;
+    csm->missed_epochs = 0;
+    csm->lastest_epoch_seq = 0;
+    csm->connid = get_next_connectionId();
+    csm->nextACK = createACK(csm.connid);
+    send_packet(csm->nextACK, &clientaddr, server->socketfd);
     csm.lastest_message_sent = NULL;
-    
+	return csm;
 }
 
-void send_msg(msg message, client_state_machine csm) {
+LSPMessage createACK(int connid){
+	LSPMessage msg = LSPMESSAGE__INIT;
+	msg.connid = connid;
+	msg.seqnum = 0;
+	msg.payload.len = 0;
+	return msg;
+}
+
+void send_msg(LSPMssage* message, client_state_machine csm) {
     if(csm.state == State.wait_to_send) {
       //Only change state if not sending an ACK
       if(message.data != nil) { //TODO Find out what nil will look like in unmarshalled packet
@@ -46,7 +54,7 @@ void wtr_to_wts(client_state_machine csm){
   
 }
   
-void receive_msg(msg message, client_state_machine csm) {
+void receive_msg(LSPMssage message, client_state_machine csm) {
     if(csm.state == State.wait_to_send) {
       if(message.data != nil){
         add_to_inbox(message);
@@ -70,3 +78,6 @@ void receive_msg(msg message, client_state_machine csm) {
     }
 }
 
+LSPMssage get_appropriate_ACK(LSPMssage message){
+    //TODO Based on the message, return the appropriate ack for the message
+}

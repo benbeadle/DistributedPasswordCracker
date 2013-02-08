@@ -1,4 +1,7 @@
-54#pragma once
+#ifndef LSP_H
+#define LSP_H
+
+#pragma once
 
 
 #include <stdio.h>
@@ -24,7 +27,7 @@ void lsp_set_epoch_lth(double lth);
 void lsp_set_epoch_cnt(int cnt);
 void lsp_set_drop_rate(double rate);
 
-class lsp_client;
+//class lsp_client;
 
 typedef struct
 {
@@ -56,11 +59,8 @@ typedef struct{
 } lsp_packet;
 
 /*
-*
-*
 *				FUN STRUCTURES MATT MADE, BE JELLY
 *				(comma requested by Ana)
-*
 */
 typedef struct{
 	int socketfd;
@@ -75,53 +75,9 @@ typedef struct{
 	linked_packet* next;
 }linked_packet;
 
-//Creating a node
-void add_packet(lsp_packet newpacket, linked_packet* box){
-	while(box->next != NULL){
-		box = box->next;
-	}
-	linked_packet* next_linked_packet = malloc(sizeof(linked_packet));
-	next_linked_packet->packet = newpacket;
-	box->next = next_linked_packet;
-}
+void add_packet(lsp_packet newpacket, linked_packet* box);
+void add_packet_front(lsp_packet newpacket, linked_packet* box);
+void add_packet_end(lsp_packet newpacket, linked_packet* box);
+lsp_packet consume_packet(linked_packet* box);
 
-//add to the front of linked list
-void add_packet_front(lsp_packet newpacket, linked_packet* box){
-	linked_packet* new_linked_packet;	
-	new_linked_packet = malloc(sizeof(linked_packet));
-	new_linked_packet->packet = newpacket;
-	new_linked_packet->next = box->next;
-	box->next = new_linked_packet;
-}
-
-//Add to the end of linked list
-void add_packet_end(lsp_packet newpacket, linked_packet* box){
-	linked_packet* current = box;
-	linked_packet* new_linked_packet;
-	new_linked_packet = malloc(sizeof(linked_packet));
-	if(new_linked_packet == NULL){
-		printf("malloc failed\n");
-		exit(-1);
-	}
-	new_linked_packet->packet = newpacket;
-	new_linked_packet->next = NULL;
-
-	while(current->next){
-		current = current->next;
-	}
-	current->next = new_linked_packet;
-}
-
-//Delete from the front
-lsp_packet consume_packet(linked_packet* box){
-	if(box == NULL){ return NULL }
-	linked_packet* current_packet = box;
-	lsp_packet packet = current_packet->packet;
-	if(box->next != NULL){
-		box = box->next;
-	} else {
-		box = NULL;
-	}
-	free(current_packet);
-	return packet;
-}
+#endif
