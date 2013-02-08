@@ -24,8 +24,6 @@ typedef enum{
     wait_to_receive
 }State;
 
-//connid, blob of memory, seqnum
-
 typedef struct{
     msg nextACK; //The latest message sent, keep sending the ack
     State current_state;
@@ -63,7 +61,6 @@ LSPMessage consume_packet(linked_packet* box){
     free(current_packet);
     return packet;
 }
-
 
 lsp_server start_lsp_server(int port){
     //allocate server struct
@@ -190,6 +187,56 @@ lsp_server start_lsp_server(int port){
     }
 }
 
+size_t read_buffer (unsigned max_length, uint8_t *out)
+{
+  size_t cur_len = 0;
+  uint8_t c;
+  while ((nread=fread(out + cur_len, 1, max_length - cur_len, stdin)) != 0)
+    {
+      cur_len += nread;
+      if (cur_len == max_length)
+        {
+          fprintf(stderr, "max message length exceeded\n");
+          exit(1);
+        }
+    }
+  return cur_len;
+}
+
+LSPMessage recieve_packet(const int socket){
+	LSPMessage *msg;
+	struct sockaddr_in clientaddr;
+	int clientaddrlen = sizeof(clientaddr);
+
+
+	// Read packed message from standard-input.
+	uint8_t buf[BUFFER_LENGTH];
+	recvfrom(socket, buf, BUFFER_LENGTH, 0,   (struct sockaddr *) &clientaddr, &clientaddrlen);
+	size_t msg_len = read_buffer (BUFFER_LENGTH, buf);
+
+	// Unpack the message using protobuf-c.
+	msg = lspmessage__unpack(NULL, msg_len, buf);   
+	if (msg == NULL){
+	  fprintf(stderr, "error unpacking incoming message\n");
+	  exit(1);
+	}
+	
+	return *(msg);
+}
+
+int send_packet(LSPMessage msg, const sockaddr* clientaddr, const int socket){
+	int len = lspmessage__get_packed_size(&msg);
+	uint8_t* buf = malloc(len);
+	lspmessage__pack(&msg, buf);
+	if(sendto(socket, buf, len, 0,  clientaddr, sizeof(*(clientaddr))) < 0) {
+		perror("cant send packet");
+		free(buf);
+		return -1;
+	}
+	free(buf);
+	return 0;
+}
+
 int get_next_connectionId() {
     return connectionId++;
 }
@@ -201,9 +248,9 @@ client_state_machine start_csm(sockaddr_in address){
     csm.missed_epochs = 0;
     csm.lastest_epoch_seq = 0;
     csm.connid = get_next_connectionId();
-    //TODO add ACK to outbox
+    //TODO send ack
     //TODO assign new ACK made to nextACk
-    //WARNING Must check if lastest message is NULL
+    //WARNING other stuff should check if must check if lastest message is NULL
     csm.lastest_message_sent = NULL;
     
 }
