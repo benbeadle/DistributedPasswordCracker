@@ -1,0 +1,64 @@
+/*
+Call lsp_client_create
+Send a join request to a server
+Using lsp_client_write
+
+Wait for a crack request from the server
+Using lsp_client_read
+When you receive a crack request from the server
+Call the SHA1 algorithm in a for loop
+Report success or failure to the server
+Using lsp_client_write
+Again call lsp_client_read
+
+When you receive a Ctrl-C
+Call lsp_client_close and exit
+*/
+
+#include <signal.h>
+
+bool keepRunning = true;
+
+void ctrlHandler(int dummy=0) {
+    keepRunning = false;
+}
+
+int main(int argc, char *argv[])
+{
+	uint8_t* pld;
+	char* location = argv[0];
+	
+	//TODO break location into pieces
+	char* destination;
+	int port;
+	
+	lsp_client* worker = lsp_client_create(destination, port);
+	
+	//TODO create join message to send
+	uint8_t* join;
+	int success = lsp_client_write(worker, join, sizeOf(*join));
+	if (success == 0) {
+		cout << "ERROR: Write Failed
+	}
+	
+	signal(SIGINT, ctrlHandler);
+	signal(SIGKILL, ctrlHandler);
+	
+	while(keepRunning) {
+		lsp_client_read(worker, pld);
+		
+		// TODO Divide payload into appropriate sections
+		// TODO Call SHA1 in loop for range given
+		
+		//TODO Save result in int
+		uint8_t* result;
+		success = lsp_client_write(worker, result, sizeOf(*result));
+		if (success == 0) {
+			cout << "ERROR: Write Failed
+		}
+	}
+	
+	lsp_client_close(worker);
+	
+	return 0;
+}

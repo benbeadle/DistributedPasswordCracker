@@ -1,0 +1,37 @@
+/*
+Call lsp_client_create
+Internally, will initiate a LSP conn. request (in lsp.c)
+Send a crack request
+Using lsp_client_write
+Wait for a reply
+Keep calling lsp_client_read
+Print the password
+lsp_client_close
+*/
+
+int main(int argc, char *argv[])
+{
+	uint8_t* pld;
+	char* location = argv[0];
+	
+	//TODO break location into pieces
+	char* destination;
+	int port;
+	
+	lsp_client* requester = lsp_client_create(destination, port);
+
+	success = lsp_client_write(requester, argv[1], argv[2]);
+	if (success == 0) {
+		cout << "ERROR: Write Failed
+	}
+
+	int result;
+	lsp_client_read(worker, result);
+	
+	//TODO translate result into something useful
+	printf("The result is %d", result);
+
+	lsp_client_close(requester);
+	
+	return 0;
+}
