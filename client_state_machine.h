@@ -18,7 +18,7 @@ typedef struct{
     int latest_epoch_seq;
     int connid;
     struct sockaddr_in clientaddr;
-    linked_packet* outbox_head;
+    linked_packet* outbox;
 }client_state_machine;
 
 

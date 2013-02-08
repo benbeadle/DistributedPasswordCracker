@@ -13,7 +13,7 @@ client_state_machine* start_csm(sockaddr address, const Server* server){
 	return csm;
 }
 
-LSPMessage createACK(int connid){
+LSPMessage createACK(const int connid){
 	LSPMessage msg = LSPMESSAGE__INIT;
 	msg.connid = connid;
 	msg.seqnum = 0;
@@ -21,43 +21,43 @@ LSPMessage createACK(int connid){
 	return msg;
 }
 
-void send_msg(LSPMssage* message, client_state_machine csm) {
+void send_msg(LSPMssage message, client_state_machine* csm, Server* server) {
     if(csm.state == State.wait_to_send) {
       //Only change state if not sending an ACK
-      if(message.data != nil) { //TODO Find out what nil will look like in unmarshalled packet
+      if(message.data.len == 0) { 
         csm.latest_message_sent = message
         wts_to_wtr(csm);
       }
-      //TODO Send the message
+	  send_packet(message, &(csm->clientaddr), server->socketfd);
     }
     else{ // If in wait_to_receive, we shouldn't send the message, we can add it to our backlog
-      add_to_csm_outbox(csm.outbox_head, message); //TODO write add_to_csm_outbox
+      add_packet_end(message, csm.outbox_head); //TODO write add_to_csm_outbox
     }
   }
   
-void wts_to_wtr(client_state_machine csm){
-  csm.state = State.wait_to_recieve;
+void wts_to_wtr(client_state_machine* csm){
+  csm->state = State.wait_to_recieve;
 }  
 
-void wtr_to_wts(client_state_machine csm){
-  if(csm.state == State.wait_to_recieve){
-    if(csm.outbox_head == NULL){
-      csm.state = State.wait_to_receive;
+void wtr_to_wts(client_state_machine* csm){
+  if(csm->state == State.wait_to_recieve){
+    if(csm->outbox_head == NULL){
+      csm->state = State.wait_to_receive;
     } else { //we have a backlog of messages. Send latest and return to wtr
       //TODO get next message from csm outbox... message msg = get_next_message(csm);
       //TODO send message
-      csm.latest_message_sent = msg
-      csm.state = State.wait_to_receive;
+      csm->latest_message_sent = msg
+      csm->state = State.wait_to_receive;
     }
   } else return //this function was called erroneously
   
   
 }
   
-void receive_msg(LSPMssage message, client_state_machine csm) {
+void receive_msg(LSPMssage message, client_state_machine* csm, Server* server) {
     if(csm.state == State.wait_to_send) {
       if(message.data != nil){
-        add_to_inbox(message);
+        add_packet_end(message, server->outbox_queue);
         csm.nextACK = get_appropriate_ACK(message);
       }
       else{
@@ -70,7 +70,7 @@ void receive_msg(LSPMssage message, client_state_machine csm) {
         add_to_inbox(message);
         csm.nextACK = get_appropriate_ACK(message);
       } else {
-        if(message.seqnum == csm.latest_message_sent.seqnum) { //TODO what if it's sequence number is greater than ours? What happened?
+        if(message.seqnum >= csm.latest_message_sent.seqnum) { //if we recieve a seqnum later than the ack were expecting, then we can assume delivery
            //TODO send nextACK
           wtr_to_wts(csm);
         }
@@ -78,6 +78,6 @@ void receive_msg(LSPMssage message, client_state_machine csm) {
     }
 }
 
-LSPMssage get_appropriate_ACK(LSPMssage message){
-    //TODO Based on the message, return the appropriate ack for the message
+LSPMssage get_appropriate_ACK(const LSPMssage message){
+    LSPMessage 
 }

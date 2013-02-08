@@ -52,32 +52,19 @@ int  lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id);
 bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id);
 bool lsp_server_close(lsp_server* a_srv, uint32_t conn_id);
 
-typedef struct{
-	uint32_t connid;
-	uint32_t seqnum;
-	uint8_t payload[];
-} lsp_packet;
-
 /*
 *				FUN STRUCTURES MATT MADE, BE JELLY
 *				(comma requested by Ana)
 */
-typedef struct{
-	int socketfd;
-	struct sockaddr_in serveraddr;          /* Internet endpoint address */
-	pthread_t server_thread;
-	linked_packet* inbox_head;
-	linked_packet* outbox_head;
-}lsp_server;
 
 typedef struct{
-	lsp_packet packet;
-	linked_packet* next;
+	LSPMssage packet;
+	LSPMssage* next;
 }linked_packet;
 
-void add_packet(lsp_packet newpacket, linked_packet* box);
-void add_packet_front(lsp_packet newpacket, linked_packet* box);
-void add_packet_end(lsp_packet newpacket, linked_packet* box);
-lsp_packet consume_packet(linked_packet* box);
+void add_packet(LSPMssage newpacket, linked_packet* box);
+void add_packet_front(LSPMssage newpacket, linked_packet* box);
+void add_packet_end(LSPMssage newpacket, linked_packet* box);
+LSPMssage consume_packet(linked_packet* box);
 
 #endif
