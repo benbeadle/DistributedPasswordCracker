@@ -51,6 +51,11 @@ int main(int argc, char *argv[])
 	//TODO Correctly convert port to int not char*
 	lsp_server* server = lsp_server_create(int(port));
 
+  if(server == NULL) {
+    printf("Unable to start server.");
+    return 0;
+  }
+  
 	//TODO Maybe split this so that it doesn't block on the reading? Child/parent threads?
 	
 	signal(SIGINT, ctrlHandler);
