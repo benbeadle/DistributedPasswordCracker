@@ -1,3 +1,10 @@
+#ifndef CLIENT_STATE_MACHINE_H
+#define CLIENT_STATE_MACHINE_H
+
+#include "lsp_client.h"
+#include "lsp_server.h"
+
+
 typedef enum{
     wait_to_send,
     wait_to_receive
@@ -20,3 +27,5 @@ void send_msg(msg message, client_state_machine csm);
 void wts_to_wtr(client_state_machine csm);
 void wtr_to_wts(client_state_machine csm);
 void receive_msg(msg message, client_state_machine csm);
+
+#endif

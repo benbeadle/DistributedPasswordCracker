@@ -1,5 +1,5 @@
-#include lsp.h
-#include "lspmessage.pb-c.h"
+#include "lsp_server.h"
+
 #define BUFFER_LENGTH 100
 #define FALSE 0
 #define OUTBOX "/tmp/outbox"
@@ -11,43 +11,6 @@
 //TODO write helper function to send messages across the socket, then replace all the "//TODO send the message" todo's with the correct function
 
 uint32_t connectionId = 1;
-
-typedef struct{
-    int socketfd;
-    int port;
-    int outboxfd[2];
-    int inboxfd[2];
-}lsp_server;
-
-
-//Linked list code
-/*
-typedef struct{
-    LSPMessage packet;
-    linked_packet* next;
-}linked_packet;
-
-void add_packet(LSPMessage newmsg, linked_packet* box){
-    while(box->next != NULL){
-        box = box->next;
-    }
-    linked_packet* next_linked_packet = malloc(sizeof(linked_packet));
-    next_linked_packet->packet = newmsg;
-    box->next = next_linked_packet;
-}
-LSPMessage consume_packet(linked_packet* box){
-    if(box == NULL){ return NULL }
-    linked_packet* current_packet = box;
-    LSPMessage packet = current_packet->packet;
-    if(box->next != NULL){
-        box = box->next;
-    } else {
-        box = NULL;
-    }
-    free(current_packet);
-    return packet;
-}
-*/
 
 lsp_server start_lsp_server(int port){
     //allocate server struct
@@ -169,8 +132,7 @@ lsp_server start_lsp_server(int port){
     }
 }
 
-size_t read_buffer (unsigned max_length, uint8_t *out)
-{
+size_t read_buffer (unsigned max_length, uint8_t *out){
   size_t cur_len = 0;
   uint8_t c;
   while ((nread=fread(out + cur_len, 1, max_length - cur_len, stdin)) != 0)
@@ -248,11 +210,11 @@ int send_packet(LSPMessage msg, const sockaddr* clientaddr, const int socket){
 	return 0;
 }
 
-int get_next_connectionId() {
+int get_next_connectionId(){
     return connectionId++;
 }
 
-void epoch_tick() {
+void epoch_tick(){
     //TODO Wrap all code in a for each statement for each csm
     if(latest_message_sent.seqnum == latest_epoch_seq) {
       missed_epochs++;

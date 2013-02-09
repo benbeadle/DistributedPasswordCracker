@@ -1,3 +1,4 @@
+#include "client_state_machine.h"
 
 client_state_machine start_csm(sockaddr_in address){
     client_state_machine csm = *malloc(sizeof(client_state_machine));
