@@ -1,4 +1,22 @@
+#include <time.h>
+
+//default value for timer is 2 seconds
 
 timer_process(int n){
 	every n seconds send signal that networkIO client-states can intercept
+	
+	
+	//epoch timer fires a client when
+	
+	// CLIENT SIDE	
+		//-Resend a cnnection request (original request was not ACK yet)
+		//-Send an ACK for most recent recived data or ACK with seqNum 0 if no data messages have been recieved. 
+		//-Data message was sent but not ACK, then resend data message
+		
+	//SERVER SIDE
+		//-ACK connection request, if no data message has been recieved
+		//-ACK most recent recieved data message if any
+		//-If data message has been sent, but not ACK yet, then resend data message
+		
+	//TODO: Need to handle multipule duplication messages
 }
