@@ -11,14 +11,15 @@ typedef enum{
 }State;
 
 typedef struct{
-    LSPMssage nextACK; //The latest message sent, keep sending the ack
+    LSPMssage* latest_ACK_sent; //The latest message sent, keep sending the ack
     State current_state;
-    LSPMssage latest_message_sent;
+    LSPMssage* latest_message_sent;
     int missed_epochs;
     int latest_epoch_seq;
     int connid;
-    struct sockaddr_in clientaddr;
-    linked_packet* outbox;
+	int last_seqnum_used;
+    struct sockaddr clientaddr;
+    queue_node* outbox_queue;
 }client_state_machine;
 
 

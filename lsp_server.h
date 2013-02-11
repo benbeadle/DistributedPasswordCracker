@@ -7,9 +7,9 @@
 typedef struct{
     int socketfd;
     int port;
-    int outboxfd[2];
-    int inboxfd[2];
-	linked_packet* outbox_queue;
+    int outboxfd[2]; //from application to LSP
+    int inboxfd[2]; //from LSP to application
+	queue_node* inbox_queue;
 }lsp_server;
 
 lsp_server start_lsp_server(int port);
