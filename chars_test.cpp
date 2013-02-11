@@ -10,30 +10,39 @@ typedef struct {
 
 //SEG FAULT
 chars* makeChars(char* input) {
+	printf("One");
 	int len = sizeof(input)/sizeof(char);
 	chars* output;
-    memset(&output, 0, sizeof(chars));
-	output->o = '\0';
-	output->t = '\0';
-	output->h = '\0';
-	output->th = '\0';
-	
+	printf("Two");
+	strcpy(output->o, '\0');
+	strcpy(output->t, '\0');
+	strcpy(output->h, '\0');
+	strcpy(output->th, '\0');
+	printf("Three");
 	if(len == 4) {
-		memcpy(output->th, input, sizeof(char));
-		memcpy(output->h, input + sizeof(char), sizeof(char));
-		memcpy(output->t, input + 2 * sizeof(char), sizeof(char));
-		memcpy(output->o, input + 3 * sizeof(char), sizeof(char));
+		printf("Four");
+		strcpy(output->th, input);
+		strcpy(output->h, input + sizeof(char));
+		strcpy(output->t, input + 2 * sizeof(char));
+		strcpy(output->o, input + 3 * sizeof(char));
+		printf("5");
 	} else if(len == 3) {
-		memcpy(output->h, input, sizeof(char));
-		memcpy(output->t, input + sizeof(char), sizeof(char));
-		memcpy(output->o, input + 2 * sizeof(char), sizeof(char));
+		printf("6");
+		strcpy(output->h, input);
+		strcpy(output->t, input + sizeof(char));
+		strcpy(output->o, input + 2 * sizeof(char));
+		printf("7");
 	} else if(len == 2) {
-		memcpy(output->t, input, sizeof(char));
-		memcpy(output->o, input + sizeof(char), sizeof(char));
+		printf("8");
+		strcpy(output->t, input);
+		strcpy(output->o, input + sizeof(char));
+		printf("9");
 	} else {
-		memcpy(output->o, input, sizeof(char));
+		printf("10");
+		strcpy(output->o, input);
+		printf("11");
 	}
-			
+	printf("12");
 	return output;
 }
 chars* plusPlus(chars* input) {
@@ -78,19 +87,22 @@ char* returnCharArray(chars* input) {
 	else if(*input->t != '\0')
 		length = 2;
 	char* output;
-    memset(&output, 0, sizeof(char)*length);
 	if(*input->th != '\0')
-		strncpy(input->th, output, sizeof(char));
+		strcpy(input->th, output);
 	if(*input->h != '\0')
-		strncpy(input->h, output, sizeof(char));
+		strcpy(input->h, output);
 	if(*input->t != '\0')
-		strncpy(input->t, output, sizeof(char));
-	strncpy(input->o, output, sizeof(char));
+		strcpy(input->t, output);
+	strcpy(input->o, output);
 }
 
 int main() {
-	char* out = "a";
+	printf("Hey");
+	char* out;
+	strcpy(out, "a");
+	printf("Howdy");
 	chars* a = makeChars(out);
+	printf("last");
 	//cout << a << endl;
 	//plusPlus(a);
 	//cout << returnCharArray(a) << endl;
