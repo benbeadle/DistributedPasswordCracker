@@ -7,17 +7,17 @@ typedef struct {
 	char* h;
 	char* th;	//Very left letter
 } chars;
-
+/*
 //SEG FAULT
 chars* makeChars(char* input) {
 	printf("One");
 	int len = sizeof(input)/sizeof(char);
 	chars* output;
 	printf("Two");
-	strcpy(output->o, '\0');
-	strcpy(output->t, '\0');
-	strcpy(output->h, '\0');
-	strcpy(output->th, '\0');
+	output->o = malloc(sizeof(char));
+	output->t = malloc(sizeof(char));
+	output->h = malloc(sizeof(char));
+	output->th = malloc(sizeof(char));
 	printf("Three");
 	if(len == 4) {
 		printf("Four");
@@ -95,13 +95,13 @@ char* returnCharArray(chars* input) {
 		strcpy(input->t, output);
 	strcpy(input->o, output);
 }
-
+*/
 int main() {
-	printf("Hey");
-	char* out;
-	strcpy(out, "a");
+	//printf("Hey");
+	char begin[] = "aaa";
+	//strcpy(out, "a");
 	printf("Howdy");
-	chars* a = makeChars(out);
+	//chars* a = makeChars(out);
 	printf("last");
 	//cout << a << endl;
 	//plusPlus(a);
