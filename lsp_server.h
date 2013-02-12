@@ -19,4 +19,10 @@ int send_packet(LSPMessage* msg, const sockaddr* clientaddr, const int socket);
 LSPMessage* recieve_packet(const int socket, struct sockaddr* clientaddr);
 int get_next_connectionId();
 void epoch_tick();
+
+/*
+int  lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id);
+bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id);
+bool lsp_server_close(lsp_server* a_srv, uint32_t conn_id);
+*/
 #endif
