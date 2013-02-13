@@ -1,0 +1,44 @@
+lsp_server_create
+Input:     port
+Output:    
+Return:    lsp_server* (NULL if failure)
+
+lsp_server_read
+Input:     lsp_server*, void* pld, uint32_t* conn_id
+Output:    conn_id filled with connid of packet, pld filled with data from message
+Return:    int (-1 if server failure, 0 if empty, >0 for bytes of pld)
+
+lsp_server_write
+Input:      lsp_server*, void* pld, int lth, uint32_t conn_id
+Output:     0 if the client with that connid is no longer connected. 1 If the client exists (does not garuntee message has been delivered!) 
+
+lsp_server_close
+Input:      lsp_server*, uint32_t conn_id
+Output:     0 if the connection didnt exist anyway, 1 if it did and is closed
+
+lsp_client_create
+Input:      const char* dest, int port
+Output:     
+Return:     lsp_client* (NULL if server cannot be reached)
+
+
+lsp_client_read
+Input:     lsp_client*, uint8_t* pld
+Output:    
+Return:    int (-1 if connection is lost, 0 if empty, >0 for bytes)
+
+
+lsp_client_write
+Input:     lsp_client*, uint*_t* pld, int lth
+Output:    
+Return:    bool False is connection is lost, true is otherwise (does not garuntee message has been delivered)
+
+lsp_client_close
+Input:     lsp_client*
+Output:     
+Return:    bool True is successful, false otherwise
+
+
+
+
+R -> S: c hash
