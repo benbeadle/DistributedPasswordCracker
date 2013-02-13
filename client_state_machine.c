@@ -27,7 +27,7 @@ LSPMessage* createACK(const int connid, const int seqnum){
 	return &msg;
 }
 
-void send_msg(LSPMssage* message, client_state_machine* csm, const Server server) {
+void send_msg(LSPMssage* message, client_state_machine* csm, const Server server){
 	switch(csm->state){
 	case wait_to_send:
 		send_packet(message, &(csm->clientaddr), server.socketfd);
@@ -73,7 +73,7 @@ void wtr_to_wts(client_state_machine* csm, const Server server){
 	}
 }
   
-void receive_msg(LSPMssage* message, client_state_machine* csm, Server* server) { 
+void receive_msg(LSPMssage* message, client_state_machine* csm, Server* server){ 
 	if(message->data->len != 0){ //unsolicited data message
 		if(message->seqnum > csm->latest_ACK_sent->seqnum) // only add the messaged to the inbox if its unique.
 			push_back(message, server->inbox_queue);
