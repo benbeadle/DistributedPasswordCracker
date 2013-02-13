@@ -5,7 +5,6 @@
 #define OUTBOX "/tmp/outbox"
 #define INBOX "/tmp/inbox"
 
-//TODO do we need all the free(LSPMessage*) to be lspmessage__free_unpacked(LSPMessage*, NULL) ?
 //TODO we need those sighandlers back in
 //TODO Epoch stuff
 //TDOD try and compile! (Ouch!)
@@ -144,7 +143,7 @@ lsp_server start_lsp_server(int port){
             if(FD_ISSET(server.inbox[0], &writefds)){ //The main program wants the next message which is in the server's single inbox_list linked list. Write a method get_next_message(inbox_list);
 				consume_next(msg, server.inbox_queue);
 				send_through_pipe(msg, server.inbox[0])
-				free(msg);
+				lspmessage__free_unpacked(msg, NULL);
 			}
             if(FD_ISSET(server.outbox[1], &readfds)){ //The main program want to send out a message
                 msg = read_from_pipe(server.outbox[1]);

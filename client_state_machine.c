@@ -27,11 +27,11 @@ void send_msg(LSPMssage* message, client_state_machine* csm, const Server server
 	case wait_to_send:
 		send_packet(message, &(csm->clientaddr), server.socketfd);
 		if(message->data->len != 0) { //Only change state if not sending an ACK
-			free(csm->latest_message_sent);
+			lspmessage__free_unpacked(csm->latest_message_sent, NULL);
 			csm->latest_message_sent = message
 			wts_to_wtr(csm, server);
 		} else { //we just sent an ack
-			free(csm->latest_ACK_sent;
+			lspmessage__free_unpacked(csm->latest_ACK_sent, NULL);
 			csm->latest_ACK_sent = message;
 		}
 		break;
@@ -74,7 +74,7 @@ void receive_msg(LSPMssage* message, client_state_machine* csm, Server* server) 
 			push_back(message, server->inbox_queue);
 			send_msg(createACK(message->connid, message->seqnum), csm, *server); //ACK it
 		} else {
-			free(message); //otherwise, we've recieved an unessecary acknowledgement, discard
+			lspmessage__free_unpacked(message, NULL); //otherwise, we've recieved an unessecary acknowledgement, discard
 		}
 		break;
 	case wait_to_recieve:
