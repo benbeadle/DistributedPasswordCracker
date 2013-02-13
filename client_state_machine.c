@@ -2,7 +2,7 @@
 
 uint32_t connectionId = 1;
 
-void initialize_csm(client_state_machine* csm,  const sockaddr clientaddr, const Server server){
+void initialize_csm(client_state_machine* csm,  const sockaddr clientaddr, const lsp_server server){
     csm->current_state = State.wait_to_send;
     csm->clientaddr = clientaddr;
     csm->missed_epochs = 0;
@@ -27,7 +27,7 @@ LSPMessage* createACK(const int connid, const int seqnum){
 	return &msg;
 }
 
-void send_msg(LSPMssage* message, client_state_machine* csm, const Server server) {
+void send_msg(LSPMssage* message, client_state_machine* csm, const lsp_server server) {
 	switch(csm->state){
 	case wait_to_send:
 		send_packet(message, &(csm->clientaddr), server.socketfd);
@@ -49,11 +49,11 @@ void send_msg(LSPMssage* message, client_state_machine* csm, const Server server
 	}
 }
   
-void wts_to_wtr(client_state_machine* csm, const Server server){
+void wts_to_wtr(client_state_machine* csm, const lsp_server server){
   csm->state = State.wait_to_recieve;
 }  
 
-void wtr_to_wts(client_state_machine* csm, const Server server){
+void wtr_to_wts(client_state_machine* csm, const lsp_server server){
 	LSPMessage* msg;
 	
 	switch(csm->state){
@@ -73,7 +73,7 @@ void wtr_to_wts(client_state_machine* csm, const Server server){
 	}
 }
   
-void receive_msg(LSPMssage* message, client_state_machine* csm, Server* server) { 
+void receive_msg(LSPMssage* message, client_state_machine* csm, lsp_server* server) { 
 	if(message->data->len != 0){ //unsolicited data message
 		if(message->seqnum > csm->latest_ACK_sent->seqnum) // only add the messaged to the inbox if its unique.
 			push_back(message, server->inbox_queue);

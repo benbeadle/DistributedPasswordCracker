@@ -23,7 +23,7 @@ typedef struct{
 }client_state_machine;
 
 
-client_state_machine* start_csm(sockaddr_in address. const Server* server);
+client_state_machine* start_csm(sockaddr_in address. const lsp_server* server);
 void send_msg(LSPMssage message, client_state_machine csm);
 void wts_to_wtr(client_state_machine csm);
 void wtr_to_wts(client_state_machine csm);

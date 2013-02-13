@@ -5,19 +5,21 @@
 #define OUTBOX "/tmp/outbox"
 #define INBOX "/tmp/inbox"
 
-//TODO we need those sighandlers back in
-//TODO Epoch stuff
 //TODO add test failure stuff
-//TDOD try and compile! (Ouch!)
+//TDOD try and compile! (Ouch!)                        
+
+static client_registry_node* client_registry;
+static lsp_server* serv_ptr;
 
 lsp_server start_lsp_server(int port){
     //allocate server struct
     lsp_server server;
     memset(&server, 0, sizeof(lsp_server));
+	serv_ptr = &server;
+	server.port = port;
+	
+	//Setup server address
 	sockaddr_in serveraddr;
-	
-    server.port = port;
-	
     serveraddr.serveraddr_family      = AF_INET;
     serveraddr.sin_port                = htons(port);
     serveraddr.serveraddr_addr.s_addr = htonl(INADDR_ANY);
@@ -37,7 +39,7 @@ lsp_server start_lsp_server(int port){
     /*create pipes*/
     if(pipe(server.outboxfd) < 0) perror("cant create outbox pipe");
     if(pipe(server.inboxfd) <0) perror("cant create outbox pipe");
-    
+    if(pipe(server.cmdpipefd) <0) perror("cant create cmd pipe");
 
     server.serverpid = fork();
     if(server.serverpid == -1){
@@ -51,6 +53,8 @@ lsp_server start_lsp_server(int port){
         //close write end of inbox and read end of outbox
         close(server.inboxfd[0]);
         close(server.outboxfd[1]);
+		//close the read end of the cmd pipe
+		close(sever.cmdpipefd[1];
         
         return server;
 
@@ -62,9 +66,7 @@ lsp_server start_lsp_server(int port){
         Set up a signal handler sa1 for SIGTERM which will tell the fork to exit
         and a handler sa2 for SIGCHLD which will clean up children
         */
-		/*
         struct sigaction sa1;
-        struct sigaction sa2;
         linked_packet * inbox_list;
         
         memset(&sa1, 0, sizeof(sa1));
@@ -73,23 +75,18 @@ lsp_server start_lsp_server(int port){
             perror("sigaction");
             return 1;
         }
-        memset(&sa2, 0, sizeof(sa2));
-        sa2.sa_handler = sigchld_hdl;
-        if(sigaction(SIGCHLD, &sa2, NULL)){
-            perror("sigaction");
-            return 1;
-        }
-		*/
         
         //close read end of inbox and write end of outbox
         close(server.inboxfd[1);
         close(server.outboxfd[0]);
+		//close write end of cmd pipe
+		close(server.cmdpipfd[0]);
             
 		//initialize some things we need	
         struct sockaddr_in clientaddr;   /* Internet client address */
         int clientaddrlen = sizeof(clientaddr);
         char buffer[BUFFER_LENGTH];
-		client_registry_node* client_registry;
+		
 		
 		
     
@@ -100,8 +97,9 @@ lsp_server start_lsp_server(int port){
         FD_ZERO(&rcopyfds);  
         FD_ZERO(&wcopyfds);  
         FD_SET(server.socketfd, &rcopyfds);
-        FD_SET(server.inbox[0], &wcopyfds);
         FD_SET(server.outbox[1], &rcopyfds);
+		FD_SET(server.cmdpipefd[0], &rcopyfds);
+		FD_SET(server.inbox[0], &wcopyfds);
 
         for(;;){
 			/*
@@ -156,6 +154,9 @@ lsp_server start_lsp_server(int port){
 						lspmessage__free_unpacked( msg, NULL);
 				} else send_msg(msg, csm, server);
             }
+			if(FD_ISSET(server.cmdpipe[1], &readfds)){ //The main program wants to send a command
+				//TODO 
+			}
         }
     }
 }
@@ -230,7 +231,7 @@ int get_next_connectionId(){
     return connectionId++;
 }
 
-void epoch_tick(client_state_machine* csm){
+static void epoch_tick(client_state_machine* csm){
     //TODO Wrap all code in a for each statement for each csm
 	int largest_seqnum;
 	if(csm->latest_message_sent.seqnum < csm->latest_ack_sent.seqnum){
@@ -257,3 +258,24 @@ void epoch_tick(client_state_machine* csm){
     }
 }
 
+static void sigepoch_hdl(int sig){
+	client_registry_node* registry_cpy = client_registry;
+	while(registry_cpy != NULL){
+		epoch_tick(redistry_cpy->csm);
+		registry_cpy = registry_cpy->next;
+	}
+};
+
+static void sigterm_hdl(int sig){
+	int nfds = getdtablesize();
+	int i;
+	for(i = 0; i < fdvect.size(); i++){
+		if(send(fdvect[i], "shuffle off this mortal chatroom" , 32,0)== -1){
+			perror("send message");
+		}
+		close(fdvect[i]);
+	}
+	close(m_sock);
+	exit(0);
+};
+//TODO add sgchld and sigtrm

@@ -9,6 +9,7 @@ typedef struct{
     int port;
     int outboxfd[2]; //from application to LSP
     int inboxfd[2]; //from LSP to application
+	int cmdpipefd[2];
 	queue_node* inbox_queue;
 }lsp_server;
 
