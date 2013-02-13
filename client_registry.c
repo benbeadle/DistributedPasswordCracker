@@ -26,3 +26,17 @@ int find_by_clientaddr(client_registry_node* reg, const sockaddr clientaddr, cli
 	}
 	return -1;
 } 
+
+client_registry_node* remove_by_connid(client_registry_node* reg, uint32_t connid){
+	if(reg == NULL){
+		return;
+	} else if(reg->csm->connid == connid){
+		client_registry_node* next_node = reg->next;
+		free_csm(reg->csm);
+		free(reg)
+		return next_node;
+	} else {
+		reg->next = remove_by_connid(reg->next, connid);
+		return reg;
+	}
+}

@@ -14,4 +14,6 @@ void push_back(LSPMessage* msg, queue_node* head);
 */
 int consume_next(LSPMessage* msg, queue_node* head);
 
+void free_queue(queue_node* head);
+
 #endif

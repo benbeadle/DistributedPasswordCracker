@@ -30,5 +30,6 @@ void wtr_to_wts(client_state_machine csm);
 void receive_msg(LSPMssage message, client_state_machine csm);
 LSPMessage get_appropriate_ACK(LSPMssage message);
 LSPMessage createACK(int connid);
+void free_csm(client_state_machine* csm);
 
 #endif

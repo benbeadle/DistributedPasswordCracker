@@ -24,3 +24,12 @@ int consume_next(LSPMessage* msg, queue_node* head){
 		return 0;
 	}
 }
+
+void free_queue(queue_node* head){
+	if(head->next != NULL){
+		free_queue(head->next);
+	}
+	lspmessage_free_unpacked(head->msg);
+	free(head);
+	return;
+}

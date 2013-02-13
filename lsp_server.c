@@ -7,17 +7,20 @@
 
 //TODO we need those sighandlers back in
 //TODO Epoch stuff
+//TODO add test failure stuff
 //TDOD try and compile! (Ouch!)
-//TODO fix headers
 
 lsp_server start_lsp_server(int port){
     //allocate server struct
     lsp_server server;
     memset(&server, 0, sizeof(lsp_server));
+	sockaddr_in serveraddr;
+	
     server.port = port;
-    server.serveraddr.serveraddr_family      = AF_INET;
-    server.serveraddr.sin_port                = htons(port);
-    server.serveraddr.serveraddr_addr.s_addr = htonl(INADDR_ANY);
+	
+    serveraddr.serveraddr_family      = AF_INET;
+    serveraddr.sin_port                = htons(port);
+    serveraddr.serveraddr_addr.s_addr = htonl(INADDR_ANY);
     
     /* Allocate socket */
     server.socketfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -109,7 +112,7 @@ lsp_server start_lsp_server(int port){
 			client_registry_node* node;
             /*
                 create a copy of the actual file descriptor set that we will listen for read or writes. 
-                we do this becuase we do not wish &afds to be destroyed during the select statement, which             will wait for 
+                we do this becuase we do not wish &afds to be destroyed during the select statement, which will wait for 
                 one of the file descriptors to be ready for a read or write operation
             */
             memcpy(&readfds, &rcopyfds, sizeof(rcopyfds));
@@ -227,23 +230,30 @@ int get_next_connectionId(){
     return connectionId++;
 }
 
-void epoch_tick(){
+void epoch_tick(client_state_machine* csm){
     //TODO Wrap all code in a for each statement for each csm
-    if(latest_message_sent.seqnum == latest_epoch_seq) {
-      missed_epochs++;
+	int largest_seqnum;
+	if(csm->latest_message_sent.seqnum < csm->latest_ack_sent.seqnum){
+		largest_seqnum = csm->latest_ack_sent.seqnum;
+	}else{
+		largest_seqnum = csm->latest_message_sent.seqnum;
+	}
+	
+    if(largest_seqnum == csm->latest_epoch_seq) {
+      csm->missed_epochs++;
     } else {
-      latest_epoch_seq = latest_message_sent.seqnum;
-      missed_epochs = 0;
+      csm->latest_epoch_seq = largest_seqnum;
+      csm->missed_epochs = 0;
     }
-    if(missed_epochs == MAX_MISSED_EPOCH_LIMIT) {
+    if(csm->missed_epochs == MAX_MISSED_EPOCH_LIMIT) {
       //terminate connection
       return;
     }
-    if(state == wait_to_send) {
-      send(nextACK);
+    if(csm->state == wait_to_send) {
+      csm->send(csm->nextACK); //The last data packet we sent was ACKed, just send the latest ack
     } else {
-      send(nextACK);
-      send(latest_message_sent);
+      csm->send(csm->nextACK);
+      csm->send(csm->latest_message_sent); //Were waiting for an ack, resend the data and resend the ACK
     }
 }
 

@@ -3,15 +3,20 @@
 uint32_t connectionId = 1;
 
 void initialize_csm(client_state_machine* csm,  const sockaddr clientaddr, const Server server){
-    csm->current_state = State.wait_to_receive;
+    csm->current_state = State.wait_to_send;
     csm->clientaddr = clientaddr;
     csm->missed_epochs = 0;
     csm->lastest_epoch_seq = 0;
     csm->connid = get_next_connectionId();
-	csm->last_seqnum_used = 0;
     csm->nextACK = createACK(csm->connid, 0);
     send_packet(csm->nextACK, &(csm->clientaddr), server.socketfd);
     csm.lastest_message_sent = NULL;
+}
+
+void free_csm(client_state_machine* csm){
+	lspmessage_free_unpacked(latest_ACK_sent, NULL);
+	lspmessage_free_unpacked(latest_message_sent, NULL);
+	
 }
 
 LSPMessage* createACK(const int connid, const int seqnum){
@@ -29,6 +34,7 @@ void send_msg(LSPMssage* message, client_state_machine* csm, const Server server
 		if(message->data->len != 0) { //Only change state if not sending an ACK
 			lspmessage__free_unpacked(csm->latest_message_sent, NULL);
 			csm->latest_message_sent = message
+			
 			wts_to_wtr(csm, server);
 		} else { //we just sent an ack
 			lspmessage__free_unpacked(csm->latest_ACK_sent, NULL);
@@ -68,26 +74,19 @@ void wtr_to_wts(client_state_machine* csm, const Server server){
 }
   
 void receive_msg(LSPMssage* message, client_state_machine* csm, Server* server) { 
-    switch(csm->state){
-	case wait_to_send: //We've recieved an unsolicited packet
-		if(message->data->len != 0){
+	if(message->data->len != 0){ //unsolicited data message
+		if(message->seqnum > csm->latest_ACK_sent->seqnum) // only add the messaged to the inbox if its unique.
 			push_back(message, server->inbox_queue);
-			send_msg(createACK(message->connid, message->seqnum), csm, *server); //ACK it
-		} else {
-			lspmessage__free_unpacked(message, NULL); //otherwise, we've recieved an unessecary acknowledgement, discard
-		}
-		break;
-	case wait_to_recieve:
-		if(message=->data-> != 0) { //unsolicited data message
-			push_back(message, server->inbox_queue);
-			push_back(createACK(message->connid, message->seqnum), csm->outbox_queue);  //we cant send anything now, so lets put it in the queue
-		} else { // we've recieved an ACK
+		send_msg(createACK(message->connid, message->seqnum), csm, *server); //ACK it
+	} else { //we've recieved an acknowledgement
+		if(csm->state = wait_to_recieve){ 
 			if(message.seqnum >= csm->latest_message_sent->seqnum) { //if we recieve a seqnum equal later than the ack were expecting, then we can assume delivery
 				wtr_to_wts(csm, *server);
+				return;
 			}
+		}else{ //were wait_to_send, and  recieved an unessecary acknowledgement, discard 
+			lspmessage__free_unpacked(message, NULL); 
+			return;
 		}
-		break;
-	case default:
-		break;
 	}
 }
