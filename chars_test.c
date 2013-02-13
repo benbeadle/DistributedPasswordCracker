@@ -1,9 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-//TODO: How to get string length?
 //Increase the string. Ex: aaaa -> aaab
 void increase(char* input, int len) {
-	
 	input[len - 1]++;
 	int i;
 	for(i = len-1; i >= 0; i--) {
@@ -18,9 +18,9 @@ void increase(char* input, int len) {
 }
 
 int main() {
-	char in[] = "zz";
+	char in[] = "aaaaa";
 	int i;
-	for(i = 0; i < 1; i++) {
-		increase(in, 2);
+	for(i = 0; i < 10; i++) {
+		increase(in, sizeof(in)-1);
 	}
 }

@@ -25,46 +25,19 @@ int lsp_client_read(lsp_client* a_client, uint8_t* pld){return 1;}
 bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth){return false;}
 bool lsp_client_close(lsp_client* a_client){return false;}
 
-
-typedef struct {
-	char o = '\0';	//Very right letter
-	char t = '\0';
-	char h = '\0';
-	char th = '\0';	//Very left letter
-} chars;
-
-chars* plusplus(char* input) {
-	input->o++;
-	if(input->o '{') {
-		input->o = 'a';
-		if(input->t == '\0') {
-			input->t = 'a';
-			return input;
-		} else {
-			input->t++;
-			if(input->t '{') {
-				input->t = 'a';
-				if(input->h == '\0') {
-					input->h = 'a';
-					return input;
-				} else {
-					input->h++;
-					if(input->h '{') {
-						input->h = 'a';
-						if(input->th == '\0') {
-							input->th = 'a';
-							return input;
-						} else {
-							input->th++;
-							if(input->th == '{')
-								input->th = 'a';
-							return input;
-						}
-					}
-				}
+//Increase the string. Ex: aaaa -> aaab
+void increase(char* input, int len) {
+	input[len - 1]++;
+	int i;
+	for(i = len-1; i >= 0; i--) {
+		if(input[i] == '{') {
+			input[i] = 'a';
+			if(i - 1 >= 0) {
+				input[i - 1]++;
 			}
 		}
 	}
+	printf("%s\n", input);
 }
 
 void split(const char* input, char* one, char* two) {
@@ -80,10 +53,10 @@ int main(int argc, char *argv[])
         return 0;
     }
 	
-    uint8_t* pld;		//The message payload
-	char* destination;	//The server destination
-    int port;			//The server port
-    int bytes;			//Number of bytes read from server
+    uint8_t* pld;		    //The message payload
+    char* destination;	//The server destination
+    int port;			      //The server port
+    int bytes;			    //Number of bytes read from server
 	
 	//Split the input arguments
 	split(argv[0], destination, port);
@@ -91,10 +64,10 @@ int main(int argc, char *argv[])
     lsp_client * worker = lsp_client_create(destination, port);
 
 	//Make sure it successfully connected to the server
-    if (worker == NULL) {
-        printf("Unable to connect to server.");
-        return 0;
-    }
+  if (worker == NULL) {
+      printf("Unable to connect to server.");
+      return 0;
+  }
 	
 	//TODO create join message to send
 	uint8_t* join = 'j';
