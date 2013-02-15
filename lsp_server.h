@@ -1,9 +1,15 @@
 #ifndef LSP_SERVER_H
 #define LSP_SERVER_H
-#define BUFFER_LENGTH 100
-#define FALSE 0
+
 #include lsp.h
 #include "lspmessage.pb-c.h"
+
+#define BUFFER_LENGTH 100
+#define FALSE 0
+#define SET_EPOCH_CNT 0
+#define SET_EPOCH_LNTH 1
+#define SET_DROP_RATE 2
+#define DROP_CONN 3
 
 lsp_server start_lsp_server(int port);
 LSPMessage* read_from_pipe(const int pipefd);

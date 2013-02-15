@@ -16,5 +16,5 @@ int find_by_port(lsp_user_node* reg, const int port, lsp_user* lspu);
 lsp_user* remove_by_port(lsp_user_node* reg, const int port);
 	
 //applies a function to all members of the registry.
-void apply_to_all ( lsp_user_node* reg, void (*f)(int) );
+void apply_to_all ( lsp_user_node* reg, void (*f)(lsp_user* ) );
 #endif 

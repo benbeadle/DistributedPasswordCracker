@@ -1,7 +1,7 @@
 #include "lsp_server.h"
 srand(12345);
-
-//TDOD try and compile! (Ouch!)                        
+   
+//TODO make sure packets we send have the right seqnum          
 
 lsp_server start_lsp_server(int port){
     //allocate server struct
@@ -159,29 +159,29 @@ lsp_server start_lsp_server(int port){
 				/*
 					To make my life easier, we are sending these commands as LSPMessages. connid represents the type of command,
 					seqnum the parameter. Doubles will be sent as an int, and divided by 100.
-					0 = set epoch count
-					1 = set epoch length
-					2 = set drop rate
+					
 				*/
 				int i;
 				double d;
 				msg = read_from_pipe(server.cmdpipe[1]);
 				switch(msg->connid){
-				case 0:
+				case SET_EPOCH_CNT:
 					change_epoch_limit(msg->seqnum);
 					break;
-				case 1:
+				case SET_EPOCH_LNTH:
 					i = msg->seqnum;
 					d = (double) i / (double) 100;
 					changeperiodic(d);
 					break;
-				case 2:
+				case SET_DROP_RATE:
 					i = msg->seqnum;
 					d = (double) i / (double) 100;
 					if(change_drop_rate(&packet_drop_rate, d) < 0){
 						perror("couldnt change packet drop rate");
 					}
 					break;
+				case DROP_CONN:
+					client_registry = remove_by_connid(client_registry, msg->seqnum);
 				default:
 					printf("WARNING: Undefined command packet \n");
 				}
@@ -240,12 +240,11 @@ LSPMessage* recieve_packet(const int socket, struct sockaddr* clientaddr){
 
 	// Read packed message from standard-input.
 	uint8_t buf[BUFFER_LENGTH];
-	if(recvfrom(socket, buf, BUFFER_LENGTH, 0,  clientaddr, sizeof(sizeof(*(clientaddr)))) < 0){
+	size_t msg_len = recvfrom(socket, buf, BUFFER_LENGTH, 0,  clientaddr, sizeof(sizeof(*(clientaddr)))) ;
+	if( msg_len < 0){
 		perror("cant recieve packet");
 		return NULL;
 	}
-
-	size_t msg_len = read_buffer(BUFFER_LENGTH, buf);
 
 	// Unpack the message using protobuf-c.
 	msg = lspmessage__unpack(NULL, msg_len, buf);   
