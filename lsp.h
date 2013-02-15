@@ -26,6 +26,10 @@
 void lsp_set_epoch_lth(double lth);
 void lsp_set_epoch_cnt(int cnt);
 void lsp_set_drop_rate(double rate);
+void epoch_lth_func(lsp_user*);
+void set_epoch_cnt_func(lsp_user*);
+void set_drop_func(lsp_user*);
+
 
 typedef struct{
     int socketfd;

@@ -19,6 +19,9 @@ LSPMessage* recieve_packet(const int socket, struct sockaddr* clientaddr);
 int get_next_connectionId();
 void epoch_tick(client_state_machine* csm);
 void sigepoch_hdl(int sig);
+void sigterm_hdl(int sig);
+void change_epoch_limit(int times);
+void change_drop_rate(double new_rate);
 
 client_registry_node* client_registry;
 lsp_server* serv_ptr;
