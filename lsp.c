@@ -1,15 +1,36 @@
 #include "lsp.h"
 #include "lspmessage.pb-c.h"
 
-double epoch_lth = _EPOCH_LTH;
+//double epoch_lth = _EPOCH_LTH;
 int epoch_cnt = _EPOCH_CNT;
-double drop_rate = _DROP_RATE;
+//double drop_rate = _DROP_RATE;
 
 /*
  *				LSP RELATED FUNCTIONS
  */  
 
-void lsp_set_epoch_lth(double lth){epoch_lth = lth;}
+void lsp_set_epoch_lth(double lth){
+	
+	uint8_t* buf;
+	int ilth = (int) (lth * 100);
+	int len;
+	
+	LSPMessage msg = LSPMESSAGE__INIT;
+	msg.connid = 1;
+	msg.seqnum = ilth;
+	msg.payload.len = 0;
+	
+	len = lspmessage__get_packet_size(&msg);
+	buf = malloc(len)
+	lspmessage__pack(&msg, buf);
+	
+	//TODO for all LSP items
+	if( write(serv_ptr->cmdpipefd[0], buf, len) < 0){
+		perror("Failed sending epch_lth to LSP item");
+	}
+	
+	free(buf);
+}
 void lsp_set_epoch_cnt(int cnt){epoch_cnt = cnt;}
 void lsp_set_drop_rate(double rate){drop_rate = rate;}
 

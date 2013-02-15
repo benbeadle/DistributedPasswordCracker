@@ -27,24 +27,19 @@ void lsp_set_epoch_lth(double lth);
 void lsp_set_epoch_cnt(int cnt);
 void lsp_set_drop_rate(double rate);
 
-//class lsp_client;
-
-typedef struct
-{
-
-	
-} lsp_client;
+typedef struct{
+    int socketfd;
+    int port;
+    int outboxfd[2]; //from application to LSP
+    int inboxfd[2]; //from LSP to application
+	int cmdpipefd[2];
+	queue_node* inbox_queue;
+}lsp_server, lsp_client, lsp_user;
 
 lsp_client* lsp_client_create(const char* src, int port);
 int lsp_client_read(lsp_client* a_client, uint8_t* pld);
 bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth);
 bool lsp_client_close(lsp_client* a_client);
-
-
-typedef struct
-{
-
-} lsp_server;
 
 
 lsp_server* lsp_server_create(int port);

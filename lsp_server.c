@@ -1,15 +1,7 @@
 #include "lsp_server.h"
+srand(12345);
 
-#define BUFFER_LENGTH 100
-#define FALSE 0
-#define OUTBOX "/tmp/outbox"
-#define INBOX "/tmp/inbox"
-
-//TODO add test failure stuff
 //TDOD try and compile! (Ouch!)                        
-
-static client_registry_node* client_registry;
-static lsp_server* serv_ptr;
 
 lsp_server start_lsp_server(int port){
     //allocate server struct
@@ -62,34 +54,41 @@ lsp_server start_lsp_server(int port){
         /*
         We are the child
         */
-        /*
+		//close read end of inbox and write end of outbox
+        close(server.inboxfd[1);
+        close(server.outboxfd[0]);
+		//close write end of cmd pipe
+		close(server.cmdpipfd[0]);
+		//initialize some things we need	
+        struct sockaddr_in clientaddr;   /* Internet client address */
+        int clientaddrlen = sizeof(clientaddr);
+        char buffer[BUFFER_LENGTH];
+		
+		/*
         Set up a signal handler sa1 for SIGTERM which will tell the fork to exit
         and a handler sa2 for SIGCHLD which will clean up children
         */
         struct sigaction sa1;
-        linked_packet * inbox_list;
-        
         memset(&sa1, 0, sizeof(sa1));
         sa1.sa_handler = sigterm_hdl;
         if(sigaction(SIGTERM, &sa1, NULL)){
             perror("sigaction");
             return 1;
         }
-        
-        //close read end of inbox and write end of outbox
-        close(server.inboxfd[1);
-        close(server.outboxfd[0]);
-		//close write end of cmd pipe
-		close(server.cmdpipfd[0]);
-            
-		//initialize some things we need	
-        struct sockaddr_in clientaddr;   /* Internet client address */
-        int clientaddrlen = sizeof(clientaddr);
-        char buffer[BUFFER_LENGTH];
 		
+		/*
+			Set Epoch Handler and start epoch timers
+		*/
+		if(setinterrupt() == -1){
+			perror("Failed to setup SIGALRM handler");
+		}
+		if(setperiodic(_EPOCH_LTH) == -1){
+			perror("Failed to setup periodic interrupt");
+		}
 		
-		
-    
+		/*
+			Get ready to enter select statement
+		*/
         fd_set readfds, writefds, rcopyfds, wcopyfds;
         int nfds = getdtablesize();
         FD_ZERO(&readfds);  
@@ -125,7 +124,10 @@ lsp_server start_lsp_server(int port){
             */
             if(FD_ISSET(server.socketfd, &readfds)) {
                 msg = recieve_packet(server.sockfd, &clientaddr);
-				if(msg->connid == 0){ //create new client for the connection
+				if(((double)rand()/(double)RAND_MAX) < packet_drop_rate ){ //see if we should just drop the packet for paramaterized drop rate
+					lspmessage__free_unpacked( msg, NULL);
+				}
+				else if(msg->connid == 0){ //create new client for the connection
 					node = malloc(sizeof(client_registry_node));
 					node->csm = malloc(sizeof(client_state_machine));
 					initialize_csm(node->csm, clientaddr, server);
@@ -148,14 +150,42 @@ lsp_server start_lsp_server(int port){
 			}
             if(FD_ISSET(server.outbox[1], &readfds)){ //The main program want to send out a message
                 msg = read_from_pipe(server.outbox[1]);
-                //TODO call send_msg(csm) on the correct state machine
 				if(find_by_connid(client_registry, msg->connid, csm) < 0){ //try and get the csm with the messages connid
 						printf("WARNING: unable to find client for packet, dumping recieved packet");
 						lspmessage__free_unpacked( msg, NULL);
 				} else send_msg(msg, csm, server);
             }
 			if(FD_ISSET(server.cmdpipe[1], &readfds)){ //The main program wants to send a command
-				//TODO 
+				/*
+					To make my life easier, we are sending these commands as LSPMessages. connid represents the type of command,
+					seqnum the parameter. Doubles will be sent as an int, and divided by 100.
+					0 = set epoch count
+					1 = set epoch length
+					2 = set drop rate
+				*/
+				int i;
+				double d;
+				msg = read_from_pipe(server.cmdpipe[1]);
+				switch(msg->connid){
+				case 0:
+					change_epoch_limit(msg->seqnum);
+					break;
+				case 1:
+					i = msg->seqnum;
+					d = (double) i / (double) 100;
+					changeperiodic(d);
+					break;
+				case 2:
+					i = msg->seqnum;
+					d = (double) i / (double) 100;
+					if(change_drop_rate(&packet_drop_rate, d) < 0){
+						perror("couldnt change packet drop rate");
+					}
+					break;
+				default:
+					printf("WARNING: Undefined command packet \n");
+				}
+				lspmessage__free_unpacked(msg, NULL);
 			}
         }
     }
@@ -231,7 +261,7 @@ int get_next_connectionId(){
     return connectionId++;
 }
 
-static void epoch_tick(client_state_machine* csm){
+void epoch_tick(client_state_machine* csm){
     //TODO Wrap all code in a for each statement for each csm
 	int largest_seqnum;
 	if(csm->latest_message_sent.seqnum < csm->latest_ack_sent.seqnum){
@@ -246,7 +276,7 @@ static void epoch_tick(client_state_machine* csm){
       csm->latest_epoch_seq = largest_seqnum;
       csm->missed_epochs = 0;
     }
-    if(csm->missed_epochs == MAX_MISSED_EPOCH_LIMIT) {
+    if(csm->missed_epochs == max_missed_epoch_limit) {
       //terminate connection
       return;
     }
@@ -258,7 +288,7 @@ static void epoch_tick(client_state_machine* csm){
     }
 }
 
-static void sigepoch_hdl(int sig){
+void sigepoch_hdl(int sig){
 	client_registry_node* registry_cpy = client_registry;
 	while(registry_cpy != NULL){
 		epoch_tick(redistry_cpy->csm);
@@ -266,16 +296,17 @@ static void sigepoch_hdl(int sig){
 	}
 };
 
-static void sigterm_hdl(int sig){
-	int nfds = getdtablesize();
-	int i;
-	for(i = 0; i < fdvect.size(); i++){
-		if(send(fdvect[i], "shuffle off this mortal chatroom" , 32,0)== -1){
-			perror("send message");
-		}
-		close(fdvect[i]);
-	}
-	close(m_sock);
+void sigterm_hdl(int sig){
+	close(serv_ptr->outboxfd[1]);
+	close(serv_ptr->inboxfd[0]);
+	close(serv_ptr->cmdpipefd[1]);
 	exit(0);
 };
-//TODO add sgchld and sigtrm
+
+void change_epoch_limit(int times){
+	epoch_cnt = times;
+}	
+
+void change_drop_rate(double new_rate){
+	drop_rate = new_rate;
+}
