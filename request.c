@@ -68,7 +68,7 @@ int main(int argc, char * argv[]) {
     } else {
 		char* res = (char*)pld;
         if (res[0] == 'f') {
-			memmove (res, res+1, strlen (res+1));
+			memmove(res, res+1, strlen (res+1));
             printf("Found: %s", res);
         } else {
             printf("Not Found");

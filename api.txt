@@ -1,3 +1,13 @@
+Possible Messages:
+	Join: 			"j" 					W-S
+	Crack Request: 	"c hash len" 			R-S
+	Crack Job:	 	"c hash string len" 	S-W
+	Pass Found:		"f pass"				W-S, S-R
+	Pass Not F:		"x string"				W-S
+
+
+
+
 lsp_server_create
 Input:     port
 Output:    
@@ -10,7 +20,7 @@ Return:    int (-1 if server failure, 0 if empty, >0 for bytes of pld)
 
 lsp_server_write
 Input:      lsp_server*, void* pld, int lth, uint32_t conn_id
-Output:     0 if the client with that connid is no longer connected. 1 If the client exists (does not garuntee message has been delivered!) 
+Output:     0 if the client with that connid is no longer connected. 1 If the client exists (does not guaranteed message has been delivered!) 
 
 lsp_server_close
 Input:      lsp_server*, uint32_t conn_id
