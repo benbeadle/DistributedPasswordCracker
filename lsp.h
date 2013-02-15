@@ -47,19 +47,4 @@ int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id);
 bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id);
 bool lsp_server_close(lsp_server* a_srv, uint32_t conn_id);
 
-/*
-*				FUN STRUCTURES MATT MADE, BE JELLY
-*				(comma requested by Ana)
-*/
-
-typedef struct{
-	LSPMssage packet;
-	LSPMssage* next;
-}linked_packet;
-
-void add_packet(LSPMssage newpacket, linked_packet* box);
-void add_packet_front(LSPMssage newpacket, linked_packet* box);
-void add_packet_end(LSPMssage newpacket, linked_packet* box);
-LSPMssage consume_packet(linked_packet* box);
-
 #endif
