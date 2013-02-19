@@ -3,7 +3,6 @@
 
 #pragma once
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -16,12 +15,21 @@
 #include <strings.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <signal.h>
+#include <cstdio>
+//#include "client_state_machine.h"
+#include "queue.h"
+#include "lsp_server.h"
+#include "lspmessage.pb-c.h"
 
 // Global Parameters. For both server and clients.
 
-#define _EPOCH_LTH 2.0
-#define _EPOCH_CNT 5;
-#define _DROP_RATE 0.0;
+
+
+
 
 void lsp_set_epoch_lth(double lth);
 void lsp_set_epoch_cnt(int cnt);
@@ -29,16 +37,6 @@ void lsp_set_drop_rate(double rate);
 void epoch_lth_func(lsp_user*);
 void set_epoch_cnt_func(lsp_user*);
 void set_drop_func(lsp_user*);
-
-
-typedef struct{
-    int socketfd;
-    int port;
-    int outboxfd[2]; //from application to LSP
-    int inboxfd[2]; //from LSP to application
-	int cmdpipefd[2];
-	queue_node* inbox_queue;
-}lsp_server, lsp_client, lsp_user;
 
 lsp_client* lsp_client_create(const char* src, int port);
 int lsp_client_read(lsp_client* a_client, uint8_t* pld);

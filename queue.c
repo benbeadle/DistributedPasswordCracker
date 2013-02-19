@@ -1,7 +1,8 @@
 #include "queue.h"
+#include <cstdlib>
 
 void push_back(LSPMessage* msg, queue_node* head){
-	queue_node* node = malloc(sizeof(queue_node));
+	queue_node* node = new queue_node;
 	node->msg = msg;
 	node->next = head;
 	head = node;
@@ -29,7 +30,7 @@ void free_queue(queue_node* head){
 	if(head->next != NULL){
 		free_queue(head->next);
 	}
-	lspmessage_free_unpacked(head->msg);
+	lspmessage__free_unpacked(head->msg, NULL);
 	free(head);
 	return;
 }

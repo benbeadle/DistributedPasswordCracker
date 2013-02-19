@@ -1,23 +1,14 @@
-#include <time.h>
-#include <sys/time.h>
-#include <errno.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
+#include "epoch_timer.h"
 #define BILLION 1000000000L
 
 //compile with gcc executionName.c -lrt 	
 	
 	/*ARGSUSED */
-void interrupt(int signo, siginfo_t *info, void *context){
-	void sigepoch_hdl(signo)
-}
-
 int setinterrupt(){
 	struct sigaction act;
 	
 	act.sa_flags = SA_SIGINFO;
-	act.sa_sigaction = interrupt;
+	act.sa_sigaction = sigepoch_hdl;
 	if((sigemptyset(&act.sa_mask) == -1) || (sigaction(SIGALRM, &act, NULL) == -1))
 		return 0;
 }

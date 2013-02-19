@@ -1,9 +1,11 @@
 #ifndef QUEUE_H
 #define QUEUE_H
+#pragma once
+#include "lspmessage.pb-c.h"
 
-typedef struct{
+typedef struct queue_node{
 	LSPMessage* msg;
-	queue_node* next;
+	struct queue_node* next;
 }queue_node;
 
 void push_back(LSPMessage* msg, queue_node* head);

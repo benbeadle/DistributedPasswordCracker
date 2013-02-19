@@ -2,7 +2,7 @@
 
 #ifndef PROTOBUF_C_lspmessage_2eproto__INCLUDED
 #define PROTOBUF_C_lspmessage_2eproto__INCLUDED
-
+#pragma once
 #include <google/protobuf-c/protobuf-c.h>
 
 PROTOBUF_C_BEGIN_DECLS
