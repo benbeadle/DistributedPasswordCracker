@@ -6,6 +6,7 @@
 #endif
 
 #include "lspmessage.pb-c.h"
+#include <google/protobuf-c/protobuf-c.h>
 void   lspmessage__init
                      (LSPMessage         *message)
 {

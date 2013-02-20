@@ -2,13 +2,16 @@
 #include <stdlib.h>
 #include <cstring>
 #include <cstdio>
- #include <unistd.h>
- #include <time.h>
+#include <unistd.h>
+#include <time.h>
+
 
 client_registry_node * client_registry;
 lsp_server * server;
+timer_t timerid;
 int max_missed_epoch_limit = _EPOCH_CNT;
 uint32_t connectionId = 1;
+
 //TODO make sure packets we send have the right seqnum          
 
 lsp_server* start_lsp_server(int port){
@@ -135,8 +138,8 @@ lsp_server* start_lsp_server(int port){
 					lspmessage__free_unpacked( msg, NULL);
 				}
 				else if(msg->connid == 0){ //create new client for the connection
-					node = new client_registry_node;
-					node->csm = new client_state_machine;
+					node = static_cast<client_registry_node*>(malloc(sizeof(client_registry_node)));
+					node->csm = static_cast<client_state_machine*>(malloc(sizeof(client_state_machine)));
 					initialize_csm(node->csm, clientaddr, server);
 					node->next = client_registry;
 					client_registry = node;
@@ -150,7 +153,7 @@ lsp_server* start_lsp_server(int port){
 				}
             
             }
-            if(FD_ISSET(server->inboxfd[0], &writefds)){ //The main program wants the next message which is in the server's single inbox_list linked list. Write a method get_next_message(inbox_list);
+            if(FD_ISSET(server->inboxfd[0], &writefds)){ //The main program wants the next message which is in the server's single inbox_list linked list.
 				consume_next(msg, server->inbox_queue);
 				send_through_pipe(msg, server->inboxfd[0]);
 				lspmessage__free_unpacked(msg, NULL);
@@ -312,7 +315,7 @@ void sigterm_hdl(int sig){
 			CSM STUFF
 **************************/
 
-void initialize_csm(client_state_machine* csm,  const struct sockaddr_in clientaddr, const lsp_server* server){
+void initialize_csm(client_state_machine* csm,  const struct sockaddr_in clientaddr, lsp_server* server){
     csm->current_state = wait_to_send;
     csm->clientaddr = clientaddr;
     csm->missed_epochs = 0;
@@ -321,6 +324,7 @@ void initialize_csm(client_state_machine* csm,  const struct sockaddr_in clienta
     csm->latest_ACK_sent = createACK(csm->connid, 0);
     send_packet(csm->latest_ACK_sent, &(csm->clientaddr), server->socketfd, (socklen_t) sizeof(csm->clientaddr));
     csm->latest_message_sent = NULL;
+	return;
 }
 
 void free_csm(client_state_machine* csm){
@@ -332,7 +336,7 @@ void free_csm(client_state_machine* csm){
 LSPMessage* createACK(const int connid, const int seqnum){
 	
 	LSPMessage msg = LSPMESSAGE__INIT;
-	LSPMessage *returnmsg = new LSPMessage;
+	LSPMessage *returnmsg = static_cast<LSPMessage*>(malloc(sizeof(LSPMessage)));
 	msg.connid = connid;
 	msg.seqnum = 0;
 	msg.payload.len = 0;

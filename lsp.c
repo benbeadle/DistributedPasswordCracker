@@ -10,6 +10,10 @@ lsp_user_node* registry;
 *				Each function is design to kick-off the passing 
 				of the approprate function pointer to all LSPusers in the registry
  */  
+ 
+ int main(void){
+ 
+ }
 
 void lsp_set_epoch_lth(double lth){
 	epoch_lth = lth;
@@ -185,7 +189,7 @@ lsp_server* lsp_server_create(int port)
 	lsp_server* server = start_lsp_server(port);
 
 	//add server to registry
-	lsp_user_node* node = new lsp_user_node;
+	lsp_user_node* node = static_cast<lsp_user_node*>(malloc(sizeof(lsp_user_node)));
 	node->lspu = server;
 	node->next = registry;
 	registry = node;

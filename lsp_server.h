@@ -112,7 +112,7 @@ void interrupt(int signo,  siginfo_t *info, void *context);
 int setinterrupt();
 int setperiodic(double sec);
 int changeperiodic(double sec);
-timer_t timerid;
+
 
 /************************
 			lsp user directory functions
@@ -147,5 +147,19 @@ int find_by_clientaddr(client_registry_node* reg, const struct sockaddr_in clien
 
 //removes the csm from the registry, and returns the pointer to the new registry head.
 client_registry_node* remove_by_connid(client_registry_node* reg, uint32_t connid);
+
+/*************
+	OTHER
+*************/
+lsp_client* start_lsp_client(const char* dest, int port);
+
+/************************
+		 Global Variables
+**************************/
+extern client_registry_node * client_registry;
+extern lsp_server * server;
+extern timer_t timerid;
+extern int max_missed_epoch_limit;
+extern uint32_t connectionId;
 
 #endif
