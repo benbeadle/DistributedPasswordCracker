@@ -2,7 +2,6 @@
 #define QUEUE_H
 #pragma once
 #include "lspmessage.pb-c.h"
-#include "lsp_sever.c"
 
 typedef struct queue_node{
 	LSPMessage* msg;

@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <signal.h>
 
-#define BUFFER_LENGTH 100
+#define BUFFER_LENGTH 1024
 #define FALSE 0
 #define SET_EPOCH_CNT 0
 #define SET_EPOCH_LNTH 1
@@ -99,7 +99,7 @@ lsp_client* start_lsp_client(const char* dest, int port);
 
 void initialize_csm(client_state_machine* csm,  const struct sockaddr_in clientaddr, lsp_server* server);
 void free_csm(client_state_machine* csm);
-LSPMessage* createACK(const int connid, const int seqnum);
+LSPMessage* createACK(uint8_t connid, uint8_t seqnum);
 void send_msg(LSPMessage* message, client_state_machine* csm, lsp_server* server);
 void wts_to_wtr(client_state_machine* csm, lsp_server* server);
 void wtr_to_wts(client_state_machine* csm, lsp_server* server);
@@ -156,6 +156,7 @@ client_registry_node* remove_by_connid(client_registry_node* reg, uint32_t conni
 	OTHER
 *************/
 lsp_client* start_lsp_client(const char* dest, int port);
+void exit_lsp();
 
 /************************
 		 Global Variables

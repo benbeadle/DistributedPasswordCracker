@@ -169,6 +169,8 @@ int main(int argc, char* argv[]) {
 			if(command == 'j') { //Worker Joining
 				if(current_job.isNULL()) {
 					idle_workers.push(conn_id);
+					string message = "Howdy! Just chill for a second.";
+					lsp_server_write(server, &message[0], sizeof(message), *conn_id);
 				} else {
 					SubJob n = current_job.nextJob();
 					string message = "c " + current_job.getHash() + " " + n.getBegin() + " " + toString(n.getLen());

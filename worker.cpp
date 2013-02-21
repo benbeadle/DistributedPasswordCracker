@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 	
-	while(signal_exit) {
+	while(!signal_exit) {
 		int bytes;
 		while (bytes = lsp_client_read(worker, pld) == 0) {
 			sleep(1000);
@@ -106,6 +106,7 @@ int main(int argc, char* argv[]) {
 		}
 		
 		string read = reinterpret_cast<char*>(pld);
+		cout << "message: " << read << endl;
 		vector<string> splitStr = splitString(read);
 		//c hash string len
 		
