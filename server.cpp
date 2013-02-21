@@ -8,21 +8,9 @@
 #include <signal.h>
 #include <sstream>
 #include <vector>
+#include "lsp.h"
+
 using namespace std;
-
-
-
-typedef struct
-{
-
-} lsp_server;
-
-
-lsp_server* lsp_server_create(int port) {lsp_server* s; return s;}
-int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id) {return 0;}
-bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id) {return false;}
-bool lsp_server_close(lsp_server* a_srv, uint32_t conn_id) {return false;}
-
 
 const int JOBSIZE = 1000;
 
@@ -161,7 +149,7 @@ int main(int argc, char* argv[]) {
 	queue<uint32_t*> idle_workers;
 	Job current_job = Job("", 0, 0);
 	
-	lsp_server* server = lsp_server_create(port);
+	lsp_server* server = lsp_server::lsp_server_create(port);
 	
 	if(server == NULL) {
 		cout << "Unable to start server on port " << port << "." << endl;

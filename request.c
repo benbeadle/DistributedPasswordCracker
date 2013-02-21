@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include "lsp.h"
 
 typedef int bool;
 #define true 1
