@@ -2,23 +2,6 @@
 #include <stdint.h>
 #include "lsp.h"
 
-typedef int bool;
-#define true 1
-#define false 0
-
-typedef struct {
-
-} lsp_client;
-
-lsp_client* lsp_client_create(const char* dest, int port){
-	lsp_client* c; 
-	return c;
-}
-int lsp_client_read(lsp_client* a_client, uint8_t* pld){return 1;}
-bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth){return false;}
-bool lsp_client_close(lsp_client* a_client){return false;}
-
-
 void split(const char* input, char* dest, char* port) {
     int len = (strchr(input, ':') - input) * sizeof(char);
     strncpy(dest, input, len);
@@ -27,20 +10,23 @@ void split(const char* input, char* dest, char* port) {
 
 
 int main(int argc, char * argv[]) {
-    if (argc != 3 || strchr(argv[0], ':') == NULL) {
-        printf("Invalid parameters. Must be of form: host:port hash len");
+    if (argc != 4) {
+        printf("Invalid parameters (%d). Must be of form: host:port hash len\n", argc);
         return 0;
     }
 	
     uint8_t* pld;		//The message payload
-	char* destination;	//The server destination
+    char* destination;	//The server destination
+    char* port_char;
     int port;			//The server port
     int bytes;			//Number of bytes read from server
 	
 	//Split the input arguments
-	split(argv[0], destination, port);
+	split(argv[0], destination, port_char);
 	
-    lsp_client * requester = lsp_client_create(destination, port);
+  port = *port_char - '0';
+  
+  lsp_client * requester = lsp_client_create(destination, port);
 
 	//Make sure it successfully connected to the server
     if (requester == NULL) {
@@ -49,7 +35,7 @@ int main(int argc, char * argv[]) {
     }
 	
 	//Write to the client the hash and the password length
-    int success = lsp_client_write(requester, argv[1], atoi(argv[2]));
+    int success = lsp_client_write(requester, (uint8_t*)argv[1], atoi(argv[2]));
     if (success == 0) {
         printf("Unable to write to server");
 		lsp_client_close(requester);

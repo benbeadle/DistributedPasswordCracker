@@ -165,5 +165,6 @@ extern lsp_server * server;
 extern timer_t timerid;
 extern int max_missed_epoch_limit;
 extern uint32_t connectionId;
+extern char* TAG;
 
 #endif

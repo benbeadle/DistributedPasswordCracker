@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 	queue<uint32_t*> idle_workers;
 	Job current_job = Job("", 0, 0);
 	
-	lsp_server* server = lsp_server::lsp_server_create(port);
+	lsp_server* server = lsp_server_create(port);
 	
 	if(server == NULL) {
 		cout << "Unable to start server on port " << port << "." << endl;
@@ -172,7 +172,7 @@ int main(int argc, char* argv[]) {
 				} else {
 					SubJob n = current_job.nextJob();
 					string message = "c " + current_job.getHash() + " " + n.getBegin() + " " + toString(n.getLen());
-					lsp_server_write(server, message.data(), sizeof(message), *conn_id);
+					lsp_server_write(server, &message[0], sizeof(message), *conn_id);
 				}
 			} else if(command == 'c') { //Crack Request
 				vector<string> split = splitString(read);

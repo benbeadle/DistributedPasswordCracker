@@ -11,14 +11,17 @@
 lsp_client* client = server; //Short and easy way for me to take care of compatibility issues      
 
 lsp_client* start_lsp_client(const char* dest, int port){
+	fprintf(stderr, "%s start_lsp_client", TAG);
 	srand(12345);
 	
 	//get server name
 	char server_name[256];
 	strcpy(server_name, dest);
-	
+
     //allocate client struct
+	client = static_cast<lsp_client*>(malloc(sizeof(lsp_client)));
     memset(client, 0, sizeof(lsp_client));
+
 	client->port = port;
 	
 	//Setup server address

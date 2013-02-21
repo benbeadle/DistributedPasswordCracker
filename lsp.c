@@ -10,10 +10,6 @@ lsp_user_node* registry;
 *				Each function is design to kick-off the passing 
 				of the approprate function pointer to all LSPusers in the registry
  */  
- 
- int main(void){
- 
- }
 
 void lsp_set_epoch_lth(double lth){
 	epoch_lth = lth;
@@ -123,15 +119,15 @@ int lsp_client_read(lsp_client* a_client, uint8_t* pld)
 	// Read packed message from standard-input.
 	uint8_t buf[BUFFER_LENGTH];
 	size_t msg_len = read(a_client->inboxfd[1], buf, BUFFER_LENGTH);
-	if(msg_len < 0){
-		perror("cant recieve server");
+	if(((int) msg_len) < 0){
+		perror("We recieved an empty message");
 		return -1;
 	}
 
 	// Unpack the message using protobuf-c.
 	msg = lspmessage__unpack(NULL, msg_len, buf);   
 	if (msg == NULL){
-	  fprintf(stderr, "error unpacking incoming message from client\n");
+	  fprintf(stderr, "%s lsp_cleint_read error unpacking incoming message from client\n", TAG);
 	  exit(1);
 	}
 	
@@ -195,12 +191,13 @@ lsp_server* lsp_server_create(int port)
 
 int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id)
 {
+	fprintf(stderr, "%s lsp_server_read called \n", TAG);
 	LSPMessage* msg;
 
 	// Read packed message from standard-input.
 	uint8_t buf[BUFFER_LENGTH];
 	size_t msg_len = read(a_srv->inboxfd[1], buf, BUFFER_LENGTH);
-	if(msg_len < 0){
+	if( ((int)msg_len) < 0){
 		perror("cant recieve server");
 		return -1;
 	}
@@ -208,7 +205,7 @@ int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id)
 	// Unpack the message using protobuf-c.
 	msg = lspmessage__unpack(NULL, msg_len, buf);   
 	if (msg == NULL){
-	  fprintf(stderr, "error unpacking incoming message\n");
+	  fprintf(stderr, "%s lsp_serv_read error unpacking incoming message\n", TAG);
 	  exit(1);
 	}
 	

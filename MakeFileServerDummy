@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS= -lrt -lstdc++ -I/usr/include -g -lprotobuf-c -L/usr/lib   
 DEPS = lsp.h 
-OBJ =  lsp.o lsp_server.o lsp_client.o queue.o lspmessage.pb-c.o server.o
+OBJ =  lsp.o lsp_server.o lsp_client.o queue.o lspmessage.pb-c.o server_dummy.o
 
 %.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -9,6 +9,6 @@ OBJ =  lsp.o lsp_server.o lsp_client.o queue.o lspmessage.pb-c.o server.o
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-server: $(OBJ)
+server_dummy: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
 

@@ -11,30 +11,17 @@ lsp_server * server;
 timer_t timerid;
 int max_missed_epoch_limit = _EPOCH_CNT;
 uint32_t connectionId = 1;    
+char* TAG = "Undefined: ";
 
 lsp_server* start_lsp_server(int port){
+	fprintf(stderr, "%s start_lsp_server called \n", TAG);
 	srand(12345);
-    //allocate server struct
-    memset(server, 0, sizeof(lsp_server));
-	server->port = port;
+	TAG = "Parent: "; 
 	
-	//Setup server address
-	sockaddr_in serveraddr;
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_port = htons(port);
-    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    
-    /* Allocate socket */
-    server->socketfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (server->socketfd < 0) perror("can’t create socket");
-    
-    // set SO_REUSEADDR so that we can re-use not fully deallocated chatrooms
-    int optval = 1;
-    setsockopt(server->socketfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
-    
-    /* Bind the socket */
-    if (bind(server->socketfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) < 0)
-        perror("can’t bind");
+    //allocate server struct
+	server = static_cast<lsp_server*>(malloc(sizeof(lsp_server)));
+    //memset(server, 0, sizeof(lsp_server));
+	server->port = port;
     
     /*create pipes*/
     if(pipe(server->outboxfd) < 0) perror("cant create outbox pipe");
@@ -48,25 +35,52 @@ lsp_server* start_lsp_server(int port){
         /*
             We are the parent, clean up and return
         */
+		fprintf(stderr, "%s This is the parent \n", TAG);
         //close the socket, we wont use it
-        close(server->socketfd);
+        //close(server->socketfd);
         //close write end of inbox and read end of outbox
-        close(server->inboxfd[0]);
-        close(server->outboxfd[1]);
+        close(server->inboxfd[1]);
+        close(server->outboxfd[0]);
 		//close the read end of the cmd pipe
-		close(server->cmdpipefd[1]);
+		close(server->cmdpipefd[0]);
         
         return server;
-
+		fprintf(stderr, "%s Cant get here \n", TAG);
     } else{
         /*
         We are the child
         */
+		TAG = "Child: "; 
+		fprintf(stderr, "%s This is the child \n",TAG);
 		//close read end of inbox and write end of outbox
-        close(server->inboxfd[1]);
-        close(server->outboxfd[0]);
+        close(server->inboxfd[0]);
+        close(server->outboxfd[1]);
 		//close write end of cmd pipe
-		close(server->cmdpipefd[0]);
+		close(server->cmdpipefd[1]);
+
+		/**
+			Start setting up socket
+		**/
+
+		
+		//Setup server address
+		sockaddr_in serveraddr;
+		serveraddr.sin_family = AF_INET;
+		serveraddr.sin_port = htons(port);
+		serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    
+		/* Allocate socket */
+		server->socketfd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (server->socketfd < 0) perror("can’t create socket");
+    
+		// set SO_REUSEADDR so that we can re-use not fully deallocated chatrooms
+		int optval = 1;
+		setsockopt(server->socketfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+    
+		/* Bind the socket */
+		if (bind(server->socketfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) < 0)
+			perror("can’t bind");
+
 		//initialize some things we need	
         struct sockaddr_in clientaddr;   /* Internet client address */
         socklen_t clientaddrlen = (socklen_t) sizeof(clientaddr);
@@ -103,10 +117,11 @@ lsp_server* start_lsp_server(int port){
         FD_ZERO(&writefds);  
         FD_ZERO(&rcopyfds);  
         FD_ZERO(&wcopyfds);  
+
         FD_SET(server->socketfd, &rcopyfds);
-        FD_SET(server->outboxfd[1], &rcopyfds);
+        FD_SET(server->outboxfd[0], &rcopyfds);
 		FD_SET(server->cmdpipefd[0], &rcopyfds);
-		FD_SET(server->inboxfd[0], &wcopyfds);
+		FD_SET(server->inboxfd[1], &wcopyfds);
 
         for(;;){
 			/*
@@ -115,6 +130,8 @@ lsp_server* start_lsp_server(int port){
 			LSPMessage* msg;
 			client_state_machine* csm;
 			client_registry_node* node;
+			int numunblocked;
+			memset(buffer, 0, BUFFER_LENGTH);
             /*
                 create a copy of the actual file descriptor set that we will listen for read or writes. 
                 we do this becuase we do not wish &afds to be destroyed during the select statement, which will wait for 
@@ -122,82 +139,97 @@ lsp_server* start_lsp_server(int port){
             */
             memcpy(&readfds, &rcopyfds, sizeof(rcopyfds));
             memcpy(&writefds, &wcopyfds, sizeof(wcopyfds));
-            fprintf(stderr, "Waiting for select \n");
-            select(nfds, &readfds, &writefds, 0, 0);
-            fprintf(stderr, "Select unblocked \n");
-            memset(buffer, 0, BUFFER_LENGTH);
-            /*
-                if the socket ready for reading, we will need to handle 
-                this server command. Otherwise we probably just timed out
-            */
-            if(FD_ISSET(server->socketfd, &readfds)) {
-                msg = recieve_packet(server->socketfd, (sockaddr*) &clientaddr, clientaddrlen);
-				if(((double)rand()/(double)RAND_MAX) < drop_rate ){ //see if we should just drop the packet for paramaterized drop rate
-					lspmessage__free_unpacked( msg, NULL);
-				}
-				else if(msg->connid == 0){ //create new client for the connection
-					node = static_cast<client_registry_node*>(malloc(sizeof(client_registry_node)));
-					node->csm = static_cast<client_state_machine*>(malloc(sizeof(client_state_machine)));
-					initialize_csm(node->csm, clientaddr, server); //recall, this also sends the new connection ACK
-					node->next = client_registry;
-					client_registry = node;
-					receive_msg(msg, client_registry->csm, server);
-				}
-                else{ //Else find the csm with that address and call recieve_msg(csm)		
-					if(find_by_clientaddr(client_registry, clientaddr, csm) < 0){
-						printf("WARNING: unable to find client for connection, dumping recieved packet");
-						lspmessage__free_unpacked( msg, NULL);
-					} else receive_msg(msg, csm, server);
-				}
+            fprintf(stderr, "%s Waiting for select \n", TAG);
+            numunblocked = select(nfds, &readfds, &writefds, 0, NULL);
+            fprintf(stderr, "%s Select unblocked with %i descriptors \n", TAG, numunblocked);
             
-            }
-            if(FD_ISSET(server->inboxfd[0], &writefds)){ //The main program wants the next message which is in the server's single inbox_list linked list.
-				consume_next(msg, server->inbox_queue);
-				send_through_pipe(msg, server->inboxfd[0]);
-				lspmessage__free_unpacked(msg, NULL);
-			}
-            if(FD_ISSET(server->outboxfd[1], &readfds)){ //The main program want to send out a message
-                msg = read_from_pipe(server->outboxfd[1]);
-				if(find_by_connid(client_registry, msg->connid, csm) < 0){ //try and get the csm with the messages connid
-						printf("WARNING: unable to find client for packet, dumping recieved packet");
-						lspmessage__free_unpacked( msg, NULL);
-				} else send_msg(msg, csm, server);
-            }
-			if(FD_ISSET(server->cmdpipefd[1], &readfds)){ //The main program wants to send a command
+			if(numunblocked >= 0){
 				/*
-					To make my life easier, we are sending these commands as LSPMessages. connid represents the type of command,
-					seqnum the parameter. Doubles will be sent as an int, and divided by 100.
-					
+					if the socket ready for reading, we will need to handle 
+					this server command. Otherwise we probably just timed out
 				*/
-				int i;
-				double d;
-				msg = read_from_pipe(server->cmdpipefd[1]);
-				switch(msg->connid){
-				case SET_EPOCH_CNT:
-					max_missed_epoch_limit = msg->seqnum;
-					break;
-				case SET_EPOCH_LNTH:
-					i = msg->seqnum;
-					d = (double) i / (double) 100;
-					changeperiodic(d);
-					break;
-				case SET_DROP_RATE:
-					i = msg->seqnum;
-					d = (double) i / (double) 100;
-					drop_rate = d;
-					break;
-				case DROP_CONN:
-					client_registry = remove_by_connid(client_registry, msg->seqnum);
-				default:
-					printf("WARNING: Undefined command packet \n");
+				if(FD_ISSET(server->socketfd, &readfds)) {
+					fprintf(stderr, "%s Incoming packet from socket \n", TAG);
+					msg = recieve_packet(server->socketfd, (sockaddr*) &clientaddr, clientaddrlen);
+					if(((double)rand()/(double)RAND_MAX) < drop_rate ){ //see if we should just drop the packet for paramaterized drop rate
+						lspmessage__free_unpacked( msg, NULL);
+					}
+					else if(msg->connid == 0){ //create new client for the connection
+						node = static_cast<client_registry_node*>(malloc(sizeof(client_registry_node)));
+						node->csm = static_cast<client_state_machine*>(malloc(sizeof(client_state_machine)));
+						initialize_csm(node->csm, clientaddr, server); //recall, this also sends the new connection ACK
+						node->next = client_registry;
+						client_registry = node;
+						receive_msg(msg, client_registry->csm, server);
+					}
+					else{ //Else find the csm with that address and call recieve_msg(csm)		
+						if(find_by_clientaddr(client_registry, clientaddr, csm) < 0){
+							printf("WARNING: unable to find client for connection, dumping recieved packet \n");
+							lspmessage__free_unpacked( msg, NULL);
+						} else receive_msg(msg, csm, server);
+					}
+            
 				}
-				lspmessage__free_unpacked(msg, NULL);
+				if(FD_ISSET(server->inboxfd[1], &writefds)){ //The main program wants the next message which is in the server's single inbox_list linked list.
+					fprintf(stderr, "%s Main program reading from inbox \n", TAG);
+					if(consume_next(msg, server->inbox_queue) < 0){
+						fprintf(stderr, "%s No messages to send through inbox \n", TAG);
+					}else{
+						send_through_pipe(msg, server->inboxfd[1]);
+						lspmessage__free_unpacked(msg, NULL);
+					}
+				}
+				if(FD_ISSET(server->outboxfd[0], &readfds)){ //The main program want to send out a message
+					fprintf(stderr, "%s Main program writing to outbox \n", TAG);
+					msg = read_from_pipe(server->outboxfd[0]);
+					if(find_by_connid(client_registry, msg->connid, csm) < 0){ //try and get the csm with the messages connid
+							printf("%s WARNING: unable to find client for packet, dumping recieved packet", TAG);
+							lspmessage__free_unpacked( msg, NULL);
+					} else send_msg(msg, csm, server);
+				}
+				if(FD_ISSET(server->cmdpipefd[0], &readfds)){ //The main program wants to send a command
+					fprintf(stderr, "%s Incoming command from main program \n", TAG);
+					/*
+						To make my life easier, we are sending these commands as LSPMessages. connid represents the type of command,
+						seqnum the parameter. Doubles will be sent as an int, and divided by 100.
+					
+					*/
+					int i;
+					double d;
+					msg = read_from_pipe(server->cmdpipefd[0]);
+					switch(msg->connid){
+					case SET_EPOCH_CNT:
+						max_missed_epoch_limit = msg->seqnum;
+						break;
+					case SET_EPOCH_LNTH:
+						i = msg->seqnum;
+						d = (double) i / (double) 100;
+						changeperiodic(d);
+						break;
+					case SET_DROP_RATE:
+						i = msg->seqnum;
+						d = (double) i / (double) 100;
+						drop_rate = d;
+						break;
+					case DROP_CONN:
+						client_registry = remove_by_connid(client_registry, msg->seqnum);
+					default:
+						printf("WARNING: Undefined command packet \n");
+					}
+					lspmessage__free_unpacked(msg, NULL);
+				}
+			}else{
+				perror("select()");
+				exit(1);
 			}
-        }
-    }
+			perror("meh");
+			//exit(1);
+		}
+	}
 }
 
 LSPMessage* read_from_pipe(const int pipefd){
+	fprintf(stderr, "%s read_from_pipe called\n", TAG);
 	LSPMessage *msg;
 
 	// Read packed message from standard-input.
@@ -208,7 +240,7 @@ LSPMessage* read_from_pipe(const int pipefd){
 	// Unpack the message using protobuf-c.
 	msg = lspmessage__unpack(NULL, msg_len, buf);   
 	if (msg == NULL){
-	  fprintf(stderr, "error unpacking incoming message\n");
+	  fprintf(stderr, "%s read_from_pipe error unpacking incoming message\n", TAG);
 	  exit(1);
 	}
 	
@@ -216,8 +248,30 @@ LSPMessage* read_from_pipe(const int pipefd){
 }
 
 int send_through_pipe(LSPMessage* msg, const int pipefd){
-	int len = lspmessage__get_packed_size(msg);
-	uint8_t* buf = static_cast<uint8_t*> (malloc(len));
+	fprintf(stderr, "%s send_through_pipe called\n", TAG);
+	int len;
+	uint8_t* buf;
+
+	if(msg == NULL){
+		fprintf(stderr, "%s send_through_pipe: attempting to send null msg. We'll generate an error LSPMessage \n", TAG);
+		LSPMessage* emsg;
+		emsg = createACK(-1, -1);
+		len = lspmessage__get_packed_size(emsg);
+		buf = static_cast<uint8_t*> (malloc(len));
+		lspmessage__pack(msg, buf);
+		if(write(pipefd, buf, len) < 0) {
+			perror("cant send packet");
+			free(buf);
+			return -1;
+		}
+		free(buf);
+		lspmessage__free_unpacked(emsg, NULL);
+		return -1;
+
+	}
+
+	len = lspmessage__get_packed_size(msg);
+	buf = static_cast<uint8_t*> (malloc(len));
 	lspmessage__pack(msg, buf);
 	if(write(pipefd, buf, len) < 0) {
 		perror("cant send packet");
@@ -247,15 +301,17 @@ LSPMessage* recieve_packet(const int socket, struct sockaddr* clientaddr, sockle
 	// Read packed message from standard-input.
 	uint8_t buf[BUFFER_LENGTH];
 	size_t msg_len = recvfrom(socket, buf, BUFFER_LENGTH, 0,  clientaddr, &clientaddrlen) ;
-	if( msg_len < 0){
+	if( ((int) msg_len) < 0){
 		perror("cant recieve packet");
 		return NULL;
 	}
 
+	fprintf(stderr, "%s The length of the message is %i \n", TAG, msg_len);
+
 	// Unpack the message using protobuf-c.
 	msg = lspmessage__unpack(NULL, msg_len, buf);   
 	if (msg == NULL){
-	  fprintf(stderr, "error unpacking incoming message\n");
+	  fprintf(stderr, "%s recieve_packet error unpacking incoming message\n", TAG);
 	  exit(1);
 	}
 	
@@ -331,13 +387,14 @@ void free_csm(client_state_machine* csm){
 }
 
 LSPMessage* createACK(const int connid, const int seqnum){
-	
+	fprintf(stderr, "%s createACK called \n",TAG);
 	LSPMessage msg = LSPMESSAGE__INIT;
 	LSPMessage *returnmsg = static_cast<LSPMessage*>(malloc(sizeof(LSPMessage)));
 	msg.connid = connid;
 	msg.seqnum = 0;
 	msg.payload.len = 0;
 	memcpy(returnmsg, &msg, sizeof(msg));
+	fprintf(stderr, "%s createACK finished \n",TAG);
 	return returnmsg;
 }
 
