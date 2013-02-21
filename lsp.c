@@ -16,12 +16,14 @@ lsp_user_node* registry;
  }
 
 void lsp_set_epoch_lth(double lth){
+	fprintf(stderr,"%s lsp_set_epoch_lth", TAG); 
 	epoch_lth = lth;
 	if(registry != NULL){
 		apply_to_all(registry, epoch_lth_func);
 	}
 }
 void epoch_lth_func(lsp_user* lspu){
+	fprintf(stderr,"%s epoch_lth_func", TAG); 
 	uint8_t* buf;
 	int ilth = (int) (epoch_lth * 100);
 	int len;
@@ -42,12 +44,14 @@ void epoch_lth_func(lsp_user* lspu){
 	free(buf);
 }
 void lsp_set_epoch_cnt(int cnt){
+	fprintf(stderr,"%s lsp_set_epoch_cnt", TAG); 
 	epoch_cnt = cnt;
 	if(registry != NULL){
 		apply_to_all(registry, set_epoch_cnt_func);
 	}
 }
 void set_epoch_cnt_func(lsp_user* lspu){
+	fprintf(stderr,"%s set_epoch_cnt_func", TAG); 
 	uint8_t* buf;
 	int len;
 	
@@ -68,12 +72,14 @@ void set_epoch_cnt_func(lsp_user* lspu){
 }
 
 void lsp_set_drop_rate(double rate){
+	fprintf(stderr,"%s lsp_set_drop_rate", TAG); 
 	drop_rate = rate;
 	if(registry != NULL){
 		apply_to_all(registry, set_drop_func);
 	}
 }
 void set_drop_func(lsp_user* lspu){
+	fprintf(stderr,"%s set_drop_func", TAG); 
 	uint8_t* buf;
 	int irate = (int) (drop_rate * 100);
 	int len;
@@ -103,6 +109,7 @@ void set_drop_func(lsp_user* lspu){
 //Returns false if server is not available
 lsp_client* lsp_client_create(const char* src, int port)
 {
+	fprintf(stderr,"%s lsp_client_create", TAG); 
 	lsp_client* client = start_lsp_client(src, port);
 
 	//add server to registry
@@ -118,6 +125,7 @@ lsp_client* lsp_client_create(const char* src, int port)
 //Returns # bites read
 int lsp_client_read(lsp_client* a_client, uint8_t* pld)
 {
+	fprintf(stderr,"%s lsp_client_read", TAG); 
 	LSPMessage* msg;
 
 	// Read packed message from standard-input.
@@ -145,6 +153,7 @@ int lsp_client_read(lsp_client* a_client, uint8_t* pld)
 //Should not send null
 bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth)
 {
+	fprintf(stderr,"%s lsp_client_write", TAG); 
 	uint8_t* buf;
 	int irate = (int) (drop_rate * 100);
 	int len;
@@ -181,7 +190,7 @@ bool lsp_client_close(lsp_client* a_client)
 
 lsp_server* lsp_server_create(int port)
 {
-	
+	fprintf(stderr,"%s lsp_server_create", TAG); 	
 	lsp_server* server = start_lsp_server(port);
 
 	//add server to registry
@@ -195,6 +204,7 @@ lsp_server* lsp_server_create(int port)
 
 int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id)
 {
+	fprintf(stderr,"%s lsp_server_read", TAG); 	
 	LSPMessage* msg;
 
 	// Read packed message from standard-input.
@@ -222,6 +232,7 @@ int lsp_server_read(lsp_server* a_srv, void* pld, uint32_t* conn_id)
 
 bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id)
 {
+	fprintf(stderr,"%s lsp_server_write", TAG); 		
 	uint8_t* buf;
 	int irate = (int) (drop_rate * 100);
 	int len;
@@ -247,6 +258,7 @@ bool lsp_server_write(lsp_server* a_srv, void* pld, int lth, uint32_t conn_id)
 
 bool lsp_server_close(lsp_server* a_srv, uint32_t conn_id)
 {
+	fprintf(stderr,"%s lsp_server_close", TAG); 
 	uint8_t* buf;
 	int len;
 	
