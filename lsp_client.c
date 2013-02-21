@@ -8,9 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-lsp_client* client = server; //Short and easy way for me to take care of compatibility issues
-
-//TODO make sure packets we send have the right seqnum          
+lsp_client* client = server; //Short and easy way for me to take care of compatibility issues      
 
 lsp_client* start_lsp_client(const char* dest, int port){
 	srand(12345);
@@ -184,10 +182,8 @@ lsp_client* start_lsp_client(const char* dest, int port){
 			}
             if(FD_ISSET(client->outboxfd[1], &readfds)){ //The main program want to send out a message
                 msg = read_from_pipe(client->outboxfd[1]);
-				if(find_by_connid(client_registry, msg->connid, csm) < 0){ //try and get the csm with the messages connid
-						printf("WARNING: unable to find client for packet, dumping recieved packet");
-						lspmessage__free_unpacked( msg, NULL);
-				} else send_msg(msg, csm, client);
+				msg->connid = client_registry->csm->connid;
+				send_msg(msg, csm, client);
             }
 			if(FD_ISSET(client->cmdpipefd[1], &readfds)){ //The main program wants to send a command
 				/*

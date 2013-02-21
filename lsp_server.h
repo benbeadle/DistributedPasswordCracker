@@ -86,7 +86,11 @@ void change_epoch_limit(int times);
 void change_drop_rate(double new_rate);
 void free_lsp_user( lsp_user* lspu);
 
+/*********************
+	client functions
+************************/
 
+lsp_client* start_lsp_client(const char* dest, int port);
 
 /************************
 			CSM Functions

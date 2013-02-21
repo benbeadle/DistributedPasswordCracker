@@ -103,18 +103,15 @@ void set_drop_func(lsp_user* lspu){
 //Returns false if server is not available
 lsp_client* lsp_client_create(const char* src, int port)
 {
-/*
-	lsp_client* c = new lsp_client(src, port);
-	
-	//add client to registry
-	lsp_user_node* node = malloc(sizeof(lsp_user_node));
-	node->lsp_user = c;
+	lsp_client* client = start_lsp_client(src, port);
+
+	//add server to registry
+	lsp_user_node* node = static_cast<lsp_user_node*>(malloc(sizeof(lsp_user_node)));
+	node->lspu = client;
 	node->next = registry;
 	registry = node;
 	
-	return c;
-	*/
-	return NULL; //TODO
+	return client;
 }
 
 //Returns -1 when connection lost
@@ -174,8 +171,7 @@ bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth)
 //Close connection, remember free memory
 bool lsp_client_close(lsp_client* a_client)
 {
-	//Since the desctuctor automatically gets called,
-	//Don't think we need to do anything here
+	//Lets not deal with this quite yet
 }
 
 /*

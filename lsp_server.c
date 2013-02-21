@@ -10,9 +10,7 @@ client_registry_node * client_registry;
 lsp_server * server;
 timer_t timerid;
 int max_missed_epoch_limit = _EPOCH_CNT;
-uint32_t connectionId = 1;
-
-//TODO make sure packets we send have the right seqnum          
+uint32_t connectionId = 1;    
 
 lsp_server* start_lsp_server(int port){
 	srand(12345);
@@ -269,7 +267,6 @@ int get_next_connectionId(){
 }
 
 void epoch_tick(client_state_machine* csm){
-    //TODO Wrap all code in a for each statement for each csm
 	int largest_seqnum;
 	if( (csm->latest_message_sent->seqnum) < (csm->latest_ACK_sent->seqnum)){
 		largest_seqnum = csm->latest_ACK_sent->seqnum;
@@ -543,7 +540,7 @@ int find_by_connid(client_registry_node* reg, const uint32_t connid, client_stat
 int find_by_clientaddr(client_registry_node* reg, const struct sockaddr_in clientaddr, client_state_machine* csm){
 	while(reg != NULL) {
 		//char *ip1 = inet_ntoa(( (struct sockaddr_in) clientaddr).sin_addr);
-		if( (reg->csm->clientaddr.sin_addr.s_addr) == clientaddr.sin_addr.s_addr){ //TODO resolve the casting problem you know you created
+		if( (reg->csm->clientaddr.sin_addr.s_addr) == clientaddr.sin_addr.s_addr){ 
 			csm = reg->csm;
 			return 0;
 		}
