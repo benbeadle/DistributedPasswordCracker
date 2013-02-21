@@ -9,21 +9,9 @@
 #include <math.h>
 #include <sstream>
 #include <vector>
+#include "lsp.h"
+
 using namespace std;
-
-typedef struct {} lsp_client;
-lsp_client* lsp_client_create(const char* dest, int port){
-	lsp_client* c; 
-	return c;
-}
-int lsp_client_read(lsp_client* a_client, uint8_t* pld){return 1;}
-bool lsp_client_write(lsp_client* a_client, uint8_t* pld, int lth){return false;}
-bool lsp_client_close(lsp_client* a_client){return false;}
-
-bool signal_exit = false;
-void ctrlExit(int signum) {
-	signal_exit = true;
-}
 
 char* increase(char* input, int len) {
 	input[len - 1]++;
