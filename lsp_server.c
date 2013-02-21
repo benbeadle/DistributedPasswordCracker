@@ -140,7 +140,7 @@ lsp_server* start_lsp_server(int port){
 				else if(msg->connid == 0){ //create new client for the connection
 					node = static_cast<client_registry_node*>(malloc(sizeof(client_registry_node)));
 					node->csm = static_cast<client_state_machine*>(malloc(sizeof(client_state_machine)));
-					initialize_csm(node->csm, clientaddr, server);
+					initialize_csm(node->csm, clientaddr, server); //recall, this also sends the new connection ACK
 					node->next = client_registry;
 					client_registry = node;
 					receive_msg(msg, client_registry->csm, server);
@@ -372,13 +372,19 @@ void wtr_to_wts(client_state_machine* csm, lsp_server* server){
 void send_msg(LSPMessage* message, client_state_machine* csm, lsp_server* server) {
 	switch(csm->current_state){
 	case wait_to_send:
+		//Make sure the packet parameters are good
+		message->connid = csm->connid; //This may be necessary in some situations, and cant hurt.
+		message->seqnum = (csm->latest_message_sent->seqnum > csm->latest_ACK_sent->seqnum) ? (csm->latest_message_sent->seqnum + 1) : (csm->latest_message_sent->seqnum + 1);
+		
 		send_packet(message, &(csm->clientaddr), server->socketfd, (socklen_t) sizeof(csm->clientaddr) );
 		if(message->payload.len != 0) { //Only change state if not sending an ACK
+			//switch out the old lates message sent for the new one
 			lspmessage__free_unpacked(csm->latest_message_sent, NULL);
 			csm->latest_message_sent = message;
 			
 			wts_to_wtr(csm, server);
 		} else { //we just sent an ack
+			//switch out the old latest ack sent for the new one
 			lspmessage__free_unpacked(csm->latest_ACK_sent, NULL);
 			csm->latest_ACK_sent = message;
 		}

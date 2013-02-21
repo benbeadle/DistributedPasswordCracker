@@ -112,6 +112,16 @@ lsp_client* start_lsp_client(const char* dest, int port){
 		if(setperiodic(_EPOCH_LTH) == -1){
 			perror("Failed to setup periodic interrupt");
 		}
+
+		/*
+			Start up a CSM and tell the server we're here and initiate the connection
+			we are keeping this in a client registry so that I could re-use the server code
+		*/
+		client_registry_node* client_registry = static_cast<client_registry_node*>(malloc(sizeof(client_registry_node)));
+		client_registry->csm = static_cast<client_state_machine*>(malloc(sizeof(client_state_machine)));
+		initialize_csm(client_registry->csm, serveraddr, client); //this will send the initialization ACK
+		client_registry->csm->current_state = wait_to_receive; //We need to wait for their ACK
+
 		
 		/*
 			Get ready to enter select statement
@@ -132,8 +142,8 @@ lsp_client* start_lsp_client(const char* dest, int port){
 				some temp variables that may be useful
 			*/
 			LSPMessage* msg;
-			client_state_machine* csm;
-			client_registry_node* node;
+			client_state_machine* csm; 
+			client_registry_node* node; 
             /*
                 create a copy of the actual file descriptor set that we will listen for read or writes. 
                 we do this becuase we do not wish &afds to be destroyed during the select statement, which will wait for 
@@ -154,20 +164,11 @@ lsp_client* start_lsp_client(const char* dest, int port){
 				if(((double)rand()/(double)RAND_MAX) < drop_rate ){ //see if we should just drop the packet for paramaterized drop rate
 					lspmessage__free_unpacked( msg, NULL);
 				}
-				else if(msg->connid == 0){ //create new client for the connection
-					node = static_cast<client_registry_node*>(malloc(sizeof(client_registry_node)));
-					node->csm = static_cast<client_state_machine*>(malloc(sizeof(client_state_machine)));
-					initialize_csm(node->csm, serveraddr, client);
-					node->next = client_registry;
-					client_registry = node;
+				else if(msg->seqnum == 0){ //we've established our connection
+					printf("New connection ACKed (you should only see this once");
+					client_registry->csm->connid = msg->connid;
+					receive_msg(msg, client_registry->csm, client);
 					
-					if(client_registry->next == NULL){
-						printf("WARNING the server has send a connid 0, restarting a new client!!!!");
-						//since there can only be one client, lets get rid of the old one
-						free_csm(client_registry->next->csm);
-						free(client_registry->next);
-						receive_msg(msg, client_registry->csm, client);
-					}
 				}
                 else{ //Else find the csm with that address and call recieve_msg(csm)		
 					if(find_by_clientaddr(client_registry, serveraddr, csm) < 0){
