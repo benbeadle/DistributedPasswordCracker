@@ -11,6 +11,7 @@
 lsp_client* client = server; //Short and easy way for me to take care of compatibility issues      
 
 lsp_client* start_lsp_client(const char* dest, int port){
+	fprintf(stderr, "%s start_lsp_client", TAG);
 	srand(12345);
 	
 	//get server name

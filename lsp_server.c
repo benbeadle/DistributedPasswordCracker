@@ -172,9 +172,12 @@ lsp_server* start_lsp_server(int port){
 				}
 				if(FD_ISSET(server->inboxfd[1], &writefds)){ //The main program wants the next message which is in the server's single inbox_list linked list.
 					fprintf(stderr, "%s Main program reading from inbox \n", TAG);
-					consume_next(msg, server->inbox_queue);
-					send_through_pipe(msg, server->inboxfd[1]);
-					lspmessage__free_unpacked(msg, NULL);
+					if(consume_next(msg, server->inbox_queue) < 0){
+						fprintf(stderr, "%s No messages to send through inbox \n", TAG);
+					}else{
+						send_through_pipe(msg, server->inboxfd[1]);
+						lspmessage__free_unpacked(msg, NULL);
+					}
 				}
 				if(FD_ISSET(server->outboxfd[0], &readfds)){ //The main program want to send out a message
 					fprintf(stderr, "%s Main program writing to outbox \n", TAG);
@@ -220,7 +223,7 @@ lsp_server* start_lsp_server(int port){
 				exit(1);
 			}
 			perror("meh");
-			exit(1);
+			//exit(1);
 		}
 	}
 }
@@ -323,7 +326,7 @@ int get_next_connectionId(){
 }
 
 void epoch_tick(client_state_machine* csm){
-  fprintf(stderr, "%s epoch_tick called \n", TAG);
+	fprintf(stderr, "%s start_lsp_server called \n", TAG);
 	int largest_seqnum;
 	if( (csm->latest_message_sent->seqnum) < (csm->latest_ACK_sent->seqnum)){
 		largest_seqnum = csm->latest_ACK_sent->seqnum;
@@ -392,7 +395,7 @@ void free_csm(client_state_machine* csm){
 }
 
 LSPMessage* createACK(const int connid, const int seqnum){
-  fprintf(stderr, "%s createACK called \n", TAG);
+	fprintf(stderr, "%s createACK called \n",TAG);
 	fprintf(stderr, "%s createACK called \n",TAG);
 	LSPMessage msg = LSPMESSAGE__INIT;
 	LSPMessage *returnmsg = static_cast<LSPMessage*>(malloc(sizeof(LSPMessage)));
