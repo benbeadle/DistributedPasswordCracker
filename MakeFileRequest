@@ -6,5 +6,5 @@ OBJ =  lsp.o lsp_server.o lsp_client.o queue.o lspmessage.pb-c.o request.o
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-hellomake: $(OBJ)
+request: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)

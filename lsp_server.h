@@ -86,7 +86,11 @@ void change_epoch_limit(int times);
 void change_drop_rate(double new_rate);
 void free_lsp_user( lsp_user* lspu);
 
+/*********************
+	client functions
+************************/
 
+lsp_client* start_lsp_client(const char* dest, int port);
 
 /************************
 			CSM Functions
@@ -161,5 +165,6 @@ extern lsp_server * server;
 extern timer_t timerid;
 extern int max_missed_epoch_limit;
 extern uint32_t connectionId;
+extern char* TAG;
 
 #endif

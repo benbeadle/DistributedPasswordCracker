@@ -13,6 +13,11 @@
 
 using namespace std;
 
+bool signal_exit = false;
+void ctrlExit(int signum) {
+	signal_exit = true;
+}
+
 char* increase(char* input, int len) {
 	input[len - 1]++;
 	int i;
@@ -67,8 +72,8 @@ int main(int argc, char* argv[]) {
 	//signal(SIGINT, ctrlHandler);
 	//signal(SIGKILL, ctrlHandler);
 	
-	if (argc != 1 || strchr(argv[0], ':') == NULL) {
-        printf("Invalid parameters. Must be of form: host:port hash len");
+	if (argc != 2) {
+        printf("Invalid parameters. Must be of form: host:port");
         return 0;
     }
 	

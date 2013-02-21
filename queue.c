@@ -1,5 +1,6 @@
 #include "queue.h"
 #include <cstdlib>
+#include <stdio.h>
 
 void push_back(LSPMessage* msg, queue_node* head){
 	queue_node* node = static_cast<queue_node*>(malloc(sizeof(queue_node)));
@@ -9,7 +10,12 @@ void push_back(LSPMessage* msg, queue_node* head){
 }
 
 int consume_next(LSPMessage* msg, queue_node* head){
-	if(head == NULL) {return -1;} //no messages in the inbox
+	fprintf(stderr, "%s consume_next called \n",TAG);
+	if(head == NULL) { //no messages in the inbox
+		fprintf(stderr, "%s consum_next no messages in inbox \n",TAG);
+		msg = NULL;
+		return -1;
+	} 
 	else if(head->next == NULL){ //one message in the inbox
 		msg = head->msg;
 		free(head); //we no longer need this message
