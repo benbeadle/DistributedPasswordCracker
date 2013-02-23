@@ -156,7 +156,8 @@ int main(int argc, char* argv[]) {
 	lsp_server* server = lsp_server_create(port);
 	
 	while( true){
-		sleep(30000); 
+		//Wait 5 minutes	
+		sleep(300000); 
 	}
 	
 	cout << "Thanks for using our Distributed Password Cracker! - SERVER TEST" << endl;

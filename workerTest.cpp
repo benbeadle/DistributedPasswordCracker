@@ -93,7 +93,8 @@ int main(int argc, char* argv[]) {
     lsp_client * worker = lsp_client_create(destination, (int)port);
 	
 	while(true){
-		sleep(30000);
+		//Wait 5 minutes
+		sleep(300000);
 	}
 	
 	//lsp_client_close(worker);
